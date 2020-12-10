@@ -27,8 +27,8 @@ const TOKEN: &str = "";
 fn get_channels(client: &Client) -> Result<Vec<Channel>, Box<dyn Error>> {
     let mut params = HashMap::new();
     params.insert("token", String::from(TOKEN));
+    params.insert("types", String::from("private_channel"));
     let mut channels = Vec::new();
-    let mut cursor;
 
     loop {
         let mut body: ChannelResponse = client.post("https://slack.com/api/conversations.list")
@@ -36,7 +36,7 @@ fn get_channels(client: &Client) -> Result<Vec<Channel>, Box<dyn Error>> {
             .send()
             ?.json()?;
 
-        cursor = body.response_metadata.next_cursor;
+        let cursor = body.response_metadata.next_cursor;
         channels.append(&mut body.channels);
         if cursor.is_empty() {
             break
@@ -47,15 +47,17 @@ fn get_channels(client: &Client) -> Result<Vec<Channel>, Box<dyn Error>> {
     Ok(channels)
 }
 
+fn post_message(client: &Client, channel: &Channel, message: &str) {
+
+}
+
 fn main() {
     let client = Client::new();
     let channels = get_channels(&client)
         .expect("fail");
 
     for channel in &channels {
-        if channel.name == "allmänt" {
-            println!("{:?}", channel);
-        }
+        println!("{:?}", channel);
     }
 
     println!("{:?}", channels.len());
