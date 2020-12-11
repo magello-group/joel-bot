@@ -1,7 +1,10 @@
-use reqwest::blocking::Client;
-use chrono::{Utc, DateTime, Datelike, NaiveDate};
 use std::error::Error;
+
+use chrono::{Datelike, DateTime, NaiveDate, Utc};
+use reqwest::blocking::Client;
 use serde::Deserialize;
+
+use crate::slack::SlackClient;
 
 #[derive(Deserialize)]
 struct SholidayFaboulResponse {
@@ -21,7 +24,7 @@ struct SholidayFaboulDay {
     work_free_day: String,
 }
 
-fn is_last_workday(date: &DateTime<Utc>) -> Result<bool, Box<dyn Error>> {
+pub fn is_last_workday(date: &DateTime<Utc>) -> Result<bool, Box<dyn Error>> {
     let client = Client::new();
     let url = format!("https://sholiday.faboul.se/dagar/v2.1/{}/{}", date.year(), date.month());
 
@@ -41,8 +44,9 @@ fn is_last_workday(date: &DateTime<Utc>) -> Result<bool, Box<dyn Error>> {
 
 #[cfg(test)]
 mod test {
+    use chrono::{TimeZone, Utc};
+
     use crate::last_day::is_last_workday;
-    use chrono::{Utc, TimeZone};
 
     #[test]
     fn is_2020_10_31_last_work_day() {

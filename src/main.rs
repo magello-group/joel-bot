@@ -3,47 +3,35 @@
 #[macro_use]
 extern crate rocket;
 
-use std::collections::HashMap;
-use std::error::Error;
+use std::time::Duration;
 
-use reqwest::blocking::Client;
+use chrono::{NaiveTime};
+use clokwerk::{Scheduler, TimeUnits};
+use clokwerk::Interval::*;
 use rocket_contrib::json::Json;
-use serde::Deserialize;
 
-#[derive(Deserialize)]
-#[serde(tag = "type")]
-enum SlackRequest {
-    #[serde(rename = "url_verification")]
-    Challenge(ChallengeRequest),
-    #[serde(rename = "event_callback")]
-    Event(EventRequest),
+use crate::slack::*;
+use crate::last_day::*;
+
+mod last_day;
+mod slack;
+
+fn main() {
+
+    // Run scheduler
+    let mut scheduler = Scheduler::with_tz(chrono::Utc);
+    scheduler.every(10.seconds())
+        // .at_time(NaiveTime::from_hms(12, 0, 0))
+        .run(|| {
+            SlackClient::new("").send_reminder_if_last_work_day();
+        });
+    let schedule_handle = scheduler.watch_thread(Duration::from_millis(100));
+
+    // Start web server
+    rocket::ignite().mount("/", routes![slack_request]).launch();
 }
 
-#[derive(Deserialize)]
-struct ChallengeRequest {
-    token: String,
-    challenge: String,
-}
 
-#[derive(Deserialize)]
-struct EventRequest {
-    token: String,
-    event: Event,
-}
-
-#[derive(Deserialize, Debug)]
-struct AppMentionEvent {
-    user: String,
-    text: String,
-    channel: String,
-}
-
-#[derive(Deserialize)]
-#[serde(tag = "type")]
-enum Event {
-    #[serde(rename = "app_mention")]
-    AppMentionEvent(AppMentionEvent)
-}
 
 #[post("/slack-request", format = "application/json", data = "<request>")]
 fn slack_request(request: Json<SlackRequest>) -> String {
@@ -60,77 +48,10 @@ fn handle_challenge_request(request: ChallengeRequest) -> String {
 fn handle_event_request(request: EventRequest) -> String {
     match request.event {
         Event::AppMentionEvent(event) => {
-            let client = Client::new();
-            post_message(&client, &event.channel[..], ":joel: Hej allihopa, det är jag som är jo3ll-bot");
+            let client = SlackClient::new("");
+            client.post_message(&event.channel[..], ":joel: Hej allihopa, det är jag som är jo3ll-bot");
         }
     }
 
     String::from("OK")
 }
-
-#[derive(Deserialize, Debug)]
-struct Channel {
-    id: String,
-    name: String,
-}
-
-#[derive(Deserialize, Debug)]
-struct ResponseMetadata {
-    next_cursor: String
-}
-
-#[derive(Deserialize, Debug)]
-struct ChannelResponse {
-    ok: bool,
-    channels: Vec<Channel>,
-    response_metadata: ResponseMetadata,
-}
-
-fn get_channels(client: &Client) -> Result<Vec<Channel>, Box<dyn Error>> {
-    let mut params = HashMap::new();
-    params.insert("token", String::from(TOKEN));
-    params.insert("types", String::from("private_channel"));
-    let mut channels = Vec::new();
-
-    loop {
-        let mut body: ChannelResponse = client.post("https://slack.com/api/conversations.list")
-            .form(&params)
-            .send()?
-            .json()?;
-
-        let cursor = body.response_metadata.next_cursor;
-        channels.append(&mut body.channels);
-        if cursor.is_empty() {
-            break;
-        }
-        params.insert("cursor", cursor);
-    }
-
-    Ok(channels)
-}
-
-fn post_message(client: &Client, channel_id: &str, message: &str) -> Result<(), Box<dyn Error>> {
-    let mut params = HashMap::new();
-
-    params.insert("token", TOKEN);
-    params.insert("channel", channel_id);
-    params.insert("text", message);
-
-    let resp = client.post("https://slack.com/api/chat.postMessage")
-        .form(&params)
-        .send()?;
-
-    if resp.status().is_success() {
-        Ok(())
-    } else {
-        Err(resp.status().as_str().into())
-    }
-}
-
-const TOKEN: &str = "";
-
-fn main() {
-    rocket::ignite().mount("/", routes![slack_request]).launch();
-}
-
-mod last_day;
