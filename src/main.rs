@@ -6,11 +6,7 @@ extern crate rocket;
 use std::collections::HashMap;
 use std::error::Error;
 
-use reqwest::blocking::{Client, Response};
-use rocket::{Config, Data, Request};
-use rocket::config::Environment;
-use rocket::data::{FromData, Outcome, Transform, Transformed};
-use rocket::data::FromDataSimple;
+use reqwest::blocking::Client;
 use rocket_contrib::json::Json;
 use serde::Deserialize;
 
@@ -43,24 +39,10 @@ struct AppMentionEvent {
 }
 
 #[derive(Deserialize)]
-struct ChallengeEvent {
-    user: String,
-    text: String,
-    channel: String,
-}
-
-#[derive(Deserialize)]
 #[serde(tag = "type")]
 enum Event {
     #[serde(rename = "app_mention")]
     AppMentionEvent(AppMentionEvent)
-}
-
-fn main() {
-    rocket::custom(Config::build(Environment::Development)
-        .address("0.0.0.0")
-        .unwrap()
-    ).mount("/", routes![slack_request]).launch();
 }
 
 #[post("/slack-request", format = "application/json", data = "<request>")]
@@ -104,8 +86,6 @@ struct ChannelResponse {
     response_metadata: ResponseMetadata,
 }
 
-const TOKEN: &str = "";
-
 fn get_channels(client: &Client) -> Result<Vec<Channel>, Box<dyn Error>> {
     let mut params = HashMap::new();
     params.insert("token", String::from(TOKEN));
@@ -146,3 +126,11 @@ fn post_message(client: &Client, channel_id: &str, message: &str) -> Result<(), 
         Err(resp.status().as_str().into())
     }
 }
+
+const TOKEN: &str = "";
+
+fn main() {
+    rocket::ignite().mount("/", routes![slack_request]).launch();
+}
+
+mod last_day;
