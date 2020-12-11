@@ -4,14 +4,13 @@ use chrono::{Datelike, DateTime, NaiveDate, Utc};
 use reqwest::blocking::Client;
 use serde::Deserialize;
 
-use crate::slack::SlackClient;
-
 #[derive(Deserialize)]
 struct SholidayFaboulResponse {
-    #[serde(alias = "startdatum")]
-    start_date: String,
-    #[serde(alias = "slutdatum")]
-    end_date: String,
+    // TODO: Add if needed
+    // #[serde(alias = "startdatum")]
+    // start_date: String,
+    // #[serde(alias = "slutdatum")]
+    // end_date: String,
     #[serde(alias = "dagar")]
     days: Vec<SholidayFaboulDay>,
 }

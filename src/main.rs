@@ -5,13 +5,12 @@ extern crate rocket;
 
 use std::time::Duration;
 
-use chrono::{NaiveTime};
-use clokwerk::{Scheduler, TimeUnits};
-use clokwerk::Interval::*;
+use chrono::NaiveTime;
+use clokwerk::Scheduler;
+use clokwerk::Interval::Weekday;
 use rocket_contrib::json::Json;
 
 use crate::slack::*;
-use crate::last_day::*;
 
 mod last_day;
 mod slack;
@@ -19,13 +18,15 @@ mod slack;
 fn main() {
 
     // Run scheduler
+    let client = SlackClient::new("");
     let mut scheduler = Scheduler::with_tz(chrono::Utc);
-    scheduler.every(10.seconds())
-        // .at_time(NaiveTime::from_hms(12, 0, 0))
-        .run(|| {
-            SlackClient::new("").send_reminder_if_last_work_day();
+    scheduler.every(Weekday)
+        .at_time(NaiveTime::from_hms(12, 0, 0))
+        .run(move || {
+            client.send_reminder_if_last_work_day()
+                .unwrap_or_else(|error| println!("Got error: {}", error))
         });
-    let schedule_handle = scheduler.watch_thread(Duration::from_millis(100));
+    let _schedule_handle = scheduler.watch_thread(Duration::from_millis(100));
 
     // Start web server
     rocket::ignite().mount("/", routes![slack_request]).launch();
@@ -49,7 +50,8 @@ fn handle_event_request(request: EventRequest) -> String {
     match request.event {
         Event::AppMentionEvent(event) => {
             let client = SlackClient::new("");
-            client.post_message(&event.channel[..], ":joel: Hej allihopa, det är jag som är jo3ll-bot");
+            client.post_message(&event.channel[..], ":joel: Hej allihopa, det är jag som är jo3ll-bot")
+                .unwrap_or_else(|error| println!("{}", error))
         }
     }
 

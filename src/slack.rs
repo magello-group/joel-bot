@@ -2,7 +2,6 @@ use std::collections::HashMap;
 use std::error::Error;
 
 use reqwest::blocking::Client;
-use rocket_contrib::json::Json;
 use serde::Deserialize;
 use chrono::Utc;
 
@@ -19,13 +18,15 @@ pub enum SlackRequest {
 
 #[derive(Deserialize)]
 pub struct ChallengeRequest {
-    token: String,
+    // TODO: Add if needed
+    // token: String,
     pub challenge: String,
 }
 
 #[derive(Deserialize)]
 pub struct EventRequest {
-    token: String,
+    // TODO: Add if needed
+    // token: String,
     pub event: Event,
 }
 
@@ -127,28 +128,14 @@ impl SlackClient {
                         channel.name == "joel-bot"
                     });
                 if let Some(channel) = channel {
-                    self.post_message(channel.id.as_str(), "Let's go!!");
+                    self.post_message(channel.id.as_str(), "Let's go!!")?
                 }
                 else {
                     println!(r"channel joel-bot not found ヽ(ຈل͜ຈ)ﾉ︵ ┻━┻");
                 }
             }
-            Ok(false) => {
-                println!(r"Not last work day ¯\_(ツ)_/¯");
-
-                let channels = self.get_channels()?;
-                let channel = channels.iter()
-                    .find(|&channel| {
-                        channel.name == "joel-bot"
-                    });
-                if let Some(channel) = channel {
-                    self.post_message(channel.id.as_str(), r"Not last work day ¯\_(ツ)_/¯");
-                }
-                else {
-                    println!(r"channel joel-bot not found ヽ(ຈل͜ຈ)ﾉ︵ ┻━┻");
-                }
-            },
-            Err(error) => println!("{}", error),
+            Ok(false) => println!(r"Not last work day ¯\_(ツ)_/¯"),
+            Err(error) => println!("Got error: {}", error),
         }
 
         Ok(())
