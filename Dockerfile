@@ -16,4 +16,8 @@ RUN cargo build --release
 
 FROM scratch
 COPY --from=builder /joel-bot/target/release/joel-bot /joel-bot
+COPY config.yaml Rocket.toml /
+
+ENV ROCKET_ENV production
+
 CMD ["/joel-bot"]
