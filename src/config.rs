@@ -39,7 +39,7 @@ impl Configuration {
         let beginning = Configuration::get_message_part(&self.time_report.beginning, context);
         let middle = Configuration::get_message_part(&self.time_report.middle, context);
         let end = Configuration::get_message_part(&self.time_report.end, context);
-        format!("{}\n{}\n{}", beginning, middle, end)
+        format!("@channel {}\n{}\n{}", beginning, middle, end)
     }
 
     pub fn get_introduction(&self) -> String {
