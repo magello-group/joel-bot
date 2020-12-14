@@ -3,9 +3,6 @@ use std::error::Error;
 
 use reqwest::blocking::Client;
 use serde::Deserialize;
-use chrono::Utc;
-
-use crate::last_day::*;
 
 #[derive(Deserialize)]
 #[serde(tag = "type")]
@@ -68,11 +65,25 @@ pub struct SlackClient {
 }
 
 impl SlackClient {
-
     pub fn new(token: &str) -> SlackClient {
         SlackClient {
             client: Client::new(),
-            token: String::from(token)
+            token: String::from(token),
+        }
+    }
+
+    pub fn get_channel_id_by_name(&self, channel_name: &str) -> Option<String> {
+        match self.get_channels() {
+            Ok(channels) => {
+                channels.iter().find(|&channel| {
+                    channel.name == channel_name
+                })
+                    .map(|channel| { channel.id.clone() })
+            }
+            Err(error) => {
+                println!("{}", error);
+                None
+            }
         }
     }
 
@@ -115,29 +126,5 @@ impl SlackClient {
         } else {
             Err(resp.status().as_str().into())
         }
-    }
-
-    pub fn send_reminder_if_last_work_day(&self) -> Result<(), Box<dyn Error>> {
-        let now = Utc::now();
-
-        match is_last_workday(&now) {
-            Ok(true) => {
-                let channels = self.get_channels()?;
-                let channel = channels.iter()
-                    .find(|&channel| {
-                        channel.name == "joel-bot"
-                    });
-                if let Some(channel) = channel {
-                    self.post_message(channel.id.as_str(), "Let's go!!")?
-                }
-                else {
-                    println!(r"channel joel-bot not found ヽ(ຈل͜ຈ)ﾉ︵ ┻━┻");
-                }
-            }
-            Ok(false) => println!(r"Not last work day ¯\_(ツ)_/¯"),
-            Err(error) => println!("Got error: {}", error),
-        }
-
-        Ok(())
     }
 }

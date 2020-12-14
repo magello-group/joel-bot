@@ -5,29 +5,51 @@ extern crate rocket;
 
 use std::time::Duration;
 
-use chrono::NaiveTime;
-use clokwerk::Scheduler;
+use chrono::{NaiveTime, Utc, Datelike};
+use clokwerk::{Scheduler, TimeUnits};
 use clokwerk::Interval::Weekday;
 use rocket_contrib::json::Json;
 
 use crate::slack::*;
 use crate::config::*;
+use crate::last_day::is_last_workday;
+use std::error::Error;
 
 mod last_day;
 mod slack;
 mod config;
 
 fn main() {
-    let config = Configuration::read();
+    let config = Configuration::read()
+        .expect("couldn't read configuration file");
 
     // Run scheduler
     let client = SlackClient::new("");
     let mut scheduler = Scheduler::with_tz(chrono::Utc);
-    scheduler.every(Weekday)
-        .at_time(NaiveTime::from_hms(12, 0, 0))
+    scheduler.every(10.seconds())
+        // .at_time(NaiveTime::from_hms(12, 0, 0))
         .run(move || {
-            client.send_reminder_if_last_work_day()
-                .unwrap_or_else(|error| println!("Got error: {}", error))
+            let now = Utc::now();
+            match is_last_workday(&now) {
+                Ok(true) => {
+                    let context = now.date().month().to_string();
+                    let message = config.get_message(&context);
+                    match client.get_channel_id_by_name("joel-bot") {
+                        Some(channel_id) => {
+                            if let Err(error) = client.post_message(&channel_id, &message){
+                                println!("couldn't post message: {}", error)
+                            }
+                        }
+                        None => {}
+                    }
+                }
+                Ok(false) => {
+                    println!("not last work day")
+                }
+                Err(error) => {
+                    println!("{}", error);
+                }
+            }
         });
     let _schedule_handle = scheduler.watch_thread(Duration::from_millis(100));
 
