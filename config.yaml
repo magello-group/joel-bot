@@ -3,7 +3,7 @@ intro:
     - "Hej hörni! :joel:"
     - "Tjenis! Är allt väl? :joel:"
     - "Yo, allt väl hoppas jag? :joel:"
-  about_me: "Mitt namn är joel-bot och jag har axlat @chikken's arbete nu när han inte längre finns ibland oss!\nJag kommer pliktskyldigt påminna er om att tidsrapportera sista arbetsdagen i månaden och kan även svara på frågor kring tidrapportering.\nNi kan läsa mig här: https://github.com/r2m/joel-bot"
+  about_me: "Mitt namn är joel-bot och jag har axlat @chikken's arbete nu när han inte längre finns ibland oss!\nJag kommer pliktskyldigt påminna er om att tidsrapportera sista arbetsdagen i månaden och kan även svara på frågor kring tidrapportering.\nNi kan läsa mig här: https://github.com/Pirayya/joel-bot"
   features:
     - "tid - fråga mig om när ni ska tidsrapportera denna månaden"
     - "pricing - hur mycket kostar jag, alltså vad skulle det kosta att köra en on-premise joel-bot?"

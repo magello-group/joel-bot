@@ -97,13 +97,13 @@ fn handle_event_request(request: EventRequest) -> String {
                         }
                     }
                     "pricing" => {
-                        String::from("För den nätta kostnaden av 114.805 kr per månad eller 15,8 öre per timme kan du hosta din egen joel-bot! :joel:")
+                        String::from("För den nätta kostnaden av 114,805 kr per månad eller 15,8 öre per timme kan du hosta din egen joel-bot! :joel:")
                     }
                     "skribenter" => {
                         config.get_authors()
                     }
                     command => {
-                        format!("Är du skön eller? Tror du att _jag_ vet något om {}? :joel:", command)
+                        format!("Är du skön eller? Tror du att _jag_ vet något om *{}*? :joel:", command)
                     }
                 }
             } else {
