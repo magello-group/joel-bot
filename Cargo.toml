@@ -1,6 +1,6 @@
 [package]
 name = "joel-bot"
-version = "0.1.0"
+version = "1.0.0"
 authors = [
     "Fabian Eriksson <fabian.eriksson@r2m.se>",
     "Joakim Anell <an3ll@hotmail.com>",
