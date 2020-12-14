@@ -65,11 +65,12 @@ pub struct SlackClient {
 }
 
 impl SlackClient {
-    pub fn new(token: &str) -> SlackClient {
-        SlackClient {
+    pub fn new() -> Result<SlackClient, Box<dyn Error>> {
+        let token = std::env::var("JOEL_BOT_SLACK_TOKEN")?;
+        Ok(SlackClient {
             client: Client::new(),
             token: String::from(token),
-        }
+        })
     }
 
     pub fn get_channel_id_by_name(&self, channel_name: &str) -> Option<String> {
