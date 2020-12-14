@@ -11,11 +11,15 @@ use clokwerk::Interval::Weekday;
 use rocket_contrib::json::Json;
 
 use crate::slack::*;
+use crate::config::*;
 
 mod last_day;
 mod slack;
+mod config;
 
 fn main() {
+    let string = Configuration::read().unwrap().get_message("1");
+    println!("{}", string);
 
     // Run scheduler
     let client = SlackClient::new("");
