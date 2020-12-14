@@ -35,6 +35,15 @@ pub struct Credits {
 }
 
 impl Configuration {
+    pub fn get_authors(&self) -> String {
+        let names = self.intro.credits.names
+            .iter()
+            .map(|name| format!("\t- {}", name))
+            .collect::<Vec<String>>()
+            .join("\n");
+        format!("{}\n\n{}", self.intro.credits.intro, names)
+    }
+
     pub fn get_message(&self, context: &str) -> String {
         let beginning = Configuration::get_message_part(&self.time_report.beginning, context);
         let middle = Configuration::get_message_part(&self.time_report.middle, context);

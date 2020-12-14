@@ -24,6 +24,10 @@ struct SholidayFaboulDay {
 }
 
 pub fn is_last_workday(date: &DateTime<Utc>) -> Result<bool, Box<dyn Error>> {
+    Ok(get_last_workday(date)? == date.naive_utc().date())
+}
+
+pub fn get_last_workday(date: &DateTime<Utc>) -> Result<NaiveDate, Box<dyn Error>> {
     let client = Client::new();
     let url = format!("https://sholiday.faboul.se/dagar/v2.1/{}/{}", date.year(), date.month());
 
@@ -38,7 +42,7 @@ pub fn is_last_workday(date: &DateTime<Utc>) -> Result<bool, Box<dyn Error>> {
 
     let sholiday_day_date = NaiveDate::parse_from_str(last_work_day.date.clone().as_str(), "%Y-%m-%d")?;
 
-    return Ok(sholiday_day_date == date.naive_utc().date())
+    return Ok(sholiday_day_date)
 }
 
 #[cfg(test)]

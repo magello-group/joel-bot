@@ -6,12 +6,12 @@ extern crate rocket;
 use std::time::Duration;
 
 use chrono::{Datelike, NaiveTime, Utc};
-use clokwerk::Scheduler;
 use clokwerk::Interval::Weekday;
+use clokwerk::Scheduler;
 use rocket_contrib::json::Json;
 
 use crate::config::*;
-use crate::last_day::is_last_workday;
+use crate::last_day::{get_last_workday, is_last_workday};
 use crate::slack::*;
 
 mod last_day;
@@ -24,17 +24,10 @@ fn main() {
     let client = SlackClient::new()
         .expect("couldn't initiate slack client");
 
-    //
-    // Features
-    // - Sensible messages
-    // - @joel-bot - Give presentation, explain features and his existential value
-
-    println!("{}", config.get_introduction());
-
     // Run scheduler
     let mut scheduler = Scheduler::with_tz(chrono::Utc);
     scheduler.every(Weekday)
-        .at_time(NaiveTime::from_hms(12, 0, 0))
+        .at_time(NaiveTime::from_hms(9, 0, 0))
         .run(move || {
             let now = Utc::now();
             match is_last_workday(&now) {
@@ -58,7 +51,7 @@ fn main() {
                 }
             }
         });
-    let _schedule_handle = scheduler.watch_thread(Duration::from_millis(100));
+    let _schedule_handle = scheduler.watch_thread(Duration::from_secs(60));
 
     // Start web server
     rocket::ignite().mount("/", routes![slack_request]).launch();
@@ -78,13 +71,45 @@ fn handle_challenge_request(request: ChallengeRequest) -> String {
 }
 
 fn handle_event_request(request: EventRequest) -> String {
+    let config = Configuration::read()
+        .expect("couldn't read configuration when mentioned");
+    let client = SlackClient::new()
+        .expect("couldn't initiate slack client");
     match request.event {
         Event::AppMentionEvent(event) => {
-            let config = Configuration::read()
-                .expect("couldn't read configuration when mentioned");
-            let client = SlackClient::new()
-                .expect("couldn't initiate slack client");
-            client.post_message(&event.channel[..], &config.get_introduction())
+            let splits: Vec<&str> = event.text.split(" ").collect();
+            let message: String = if splits.len() > 1 {
+                match splits[1] {
+                    "tid" => {
+                        let now = Utc::now();
+                        match get_last_workday(&now) {
+                            Ok(last_workday) => {
+                                if last_workday == now.naive_utc().date() {
+                                    format!("Okej, jag har kikat i kalendern och det är först *{}* som du behöver tidrapportera!\n\n... vänta\n... beräknar\n... det är ju idag!", last_workday)
+                                } else {
+                                    format!("Okej, jag har kikat i kalendern och det är först *{}* som du behöver tidrapportera!", last_workday)
+                                }
+                            }
+                            Err(error) => {
+                                println!("{}", error);
+                                String::from("Herregud någonting gick skitfel! Jag kanske behöver uppdatera min firmware :joel:. Kan någon snälla kolla loggen i Azure?")
+                            }
+                        }
+                    }
+                    "pricing" => {
+                        String::from("För den nätta kostnaden av 114.805 kr per månad eller 15,8 öre per timme kan du hosta din egen joel-bot! :joel:")
+                    }
+                    "skribenter" => {
+                        config.get_authors()
+                    }
+                    command => {
+                        format!("Är du skön eller? Tror du att _jag_ vet något om {}? :joel:", command)
+                    }
+                }
+            } else {
+                config.get_introduction()
+            };
+            client.post_message(&event.channel, &message)
                 .unwrap_or_else(|error| println!("{}", error))
         }
     }
