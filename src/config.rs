@@ -9,17 +9,50 @@ type Part = HashMap<String, Vec<String>>;
 
 #[derive(Deserialize, Debug)]
 pub struct Configuration {
+    intro: Intro,
+    time_report: TimeReport,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct TimeReport {
     beginning: Part,
     middle: Part,
     end: Part,
 }
 
+#[derive(Deserialize, Debug)]
+pub struct Intro {
+    greetings: Vec<String>,
+    about_me: String,
+    features: Vec<String>,
+    credits: Credits,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Credits {
+    intro: String,
+    names: Vec<String>,
+}
+
 impl Configuration {
     pub fn get_message(&self, context: &str) -> String {
-        let beginning = Configuration::get_message_part(&self.beginning, context);
-        let middle = Configuration::get_message_part(&self.middle, context);
-        let end = Configuration::get_message_part(&self.end, context);
+        let beginning = Configuration::get_message_part(&self.time_report.beginning, context);
+        let middle = Configuration::get_message_part(&self.time_report.middle, context);
+        let end = Configuration::get_message_part(&self.time_report.end, context);
         format!("{}\n{}\n{}", beginning, middle, end)
+    }
+
+    pub fn get_introduction(&self) -> String {
+        let index = rand::thread_rng().gen_range(0, self.intro.greetings.len());
+        let greeting = &self.intro.greetings[index];
+        let features = self.intro.features
+            .iter()
+            .map(|feature| format!("\t- {}", feature))
+            .collect::<Vec<String>>()
+            .join("\n");
+
+        // Sexiest line of code everest!
+        format!("{}\n\n{}\n\nSaker ni kan fråga:\n{}", greeting, self.intro.about_me, features)
     }
 
     pub fn read() -> Result<Configuration, Box<dyn Error>> {

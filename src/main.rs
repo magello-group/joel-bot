@@ -24,6 +24,13 @@ fn main() {
     let client = SlackClient::new()
         .expect("couldn't initiate slack client");
 
+    //
+    // Features
+    // - Sensible messages
+    // - @joel-bot - Give presentation, explain features and his existential value
+
+    println!("{}", config.get_introduction());
+
     // Run scheduler
     let mut scheduler = Scheduler::with_tz(chrono::Utc);
     scheduler.every(Weekday)
@@ -73,9 +80,11 @@ fn handle_challenge_request(request: ChallengeRequest) -> String {
 fn handle_event_request(request: EventRequest) -> String {
     match request.event {
         Event::AppMentionEvent(event) => {
+            let config = Configuration::read()
+                .expect("couldn't read configuration when mentioned");
             let client = SlackClient::new()
                 .expect("couldn't initiate slack client");
-            client.post_message(&event.channel[..], ":joel: Hej allihopa, det är jag som är jo3ll-bot")
+            client.post_message(&event.channel[..], &config.get_introduction())
                 .unwrap_or_else(|error| println!("{}", error))
         }
     }
