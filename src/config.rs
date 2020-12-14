@@ -52,7 +52,7 @@ impl Configuration {
             .join("\n");
 
         // Sexiest line of code everest!
-        format!("{}\n\n{}\n\nSaker ni kan fråga:\n{}", greeting, self.intro.about_me, features)
+        format!("{}\n\n{}\n\nSaker ni kan fråga (med `@joel-bot <kommando>`:\n{}", greeting, self.intro.about_me, features)
     }
 
     pub fn read() -> Result<Configuration, Box<dyn Error>> {
