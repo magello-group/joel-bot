@@ -5,15 +5,14 @@ extern crate rocket;
 
 use std::time::Duration;
 
-use chrono::{NaiveTime, Utc, Datelike};
-use clokwerk::{Scheduler, TimeUnits};
+use chrono::{Datelike, NaiveTime, Utc};
+use clokwerk::Scheduler;
 use clokwerk::Interval::Weekday;
 use rocket_contrib::json::Json;
 
-use crate::slack::*;
 use crate::config::*;
 use crate::last_day::is_last_workday;
-use std::error::Error;
+use crate::slack::*;
 
 mod last_day;
 mod slack;
@@ -26,8 +25,8 @@ fn main() {
     // Run scheduler
     let client = SlackClient::new("");
     let mut scheduler = Scheduler::with_tz(chrono::Utc);
-    scheduler.every(10.seconds())
-        // .at_time(NaiveTime::from_hms(12, 0, 0))
+    scheduler.every(Weekday)
+        .at_time(NaiveTime::from_hms(12, 0, 0))
         .run(move || {
             let now = Utc::now();
             match is_last_workday(&now) {
@@ -36,7 +35,7 @@ fn main() {
                     let message = config.get_message(&context);
                     match client.get_channel_id_by_name("joel-bot") {
                         Some(channel_id) => {
-                            if let Err(error) = client.post_message(&channel_id, &message){
+                            if let Err(error) = client.post_message(&channel_id, &message) {
                                 println!("couldn't post message: {}", error)
                             }
                         }
@@ -56,7 +55,6 @@ fn main() {
     // Start web server
     rocket::ignite().mount("/", routes![slack_request]).launch();
 }
-
 
 
 #[post("/slack-request", format = "application/json", data = "<request>")]
