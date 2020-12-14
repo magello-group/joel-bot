@@ -91,7 +91,7 @@ impl SlackClient {
     pub fn get_channels(&self) -> Result<Vec<Channel>, Box<dyn Error>> {
         let mut params = HashMap::new();
         params.insert("token", self.token.clone());
-        params.insert("types", String::from("private_channel"));
+        params.insert("types", String::from("private_channel,public_channel"));
         let mut channels = Vec::new();
 
         loop {

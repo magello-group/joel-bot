@@ -41,7 +41,7 @@ fn main() {
                 Ok(true) => {
                     let context = now.date().month().to_string();
                     let message = config.get_message(&context);
-                    match client.get_channel_id_by_name("joel-bot") {
+                    match client.get_channel_id_by_name("allmant") {
                         Some(channel_id) => {
                             if let Err(error) = client.post_message(&channel_id, &message) {
                                 println!("couldn't post message: {}", error)
