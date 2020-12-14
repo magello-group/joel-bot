@@ -18,8 +18,7 @@ mod slack;
 mod config;
 
 fn main() {
-    let string = Configuration::read().unwrap().get_message("1");
-    println!("{}", string);
+    let config = Configuration::read();
 
     // Run scheduler
     let client = SlackClient::new("");
