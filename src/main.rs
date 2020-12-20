@@ -12,10 +12,9 @@ use rocket_contrib::json::Json;
 
 use crate::config::*;
 use crate::last_day::{get_last_workday, is_last_workday};
-use crate::slack::*;
+use slack::client::*;
 
 mod last_day;
-mod slack;
 mod config;
 
 fn main() {
@@ -40,7 +39,7 @@ fn main() {
                                 println!("couldn't post message: {}", error)
                             }
                         }
-                        None => {}
+                        None => println!("no channel with name 'allmant' found!")
                     }
                 }
                 Ok(false) => {
