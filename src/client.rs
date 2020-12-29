@@ -4,43 +4,6 @@ use std::error::Error;
 use reqwest::blocking::Client;
 use serde::Deserialize;
 
-#[derive(Deserialize)]
-#[serde(tag = "type")]
-pub enum SlackRequest {
-    #[serde(rename = "url_verification")]
-    Challenge(ChallengeRequest),
-    #[serde(rename = "event_callback")]
-    Event(EventRequest),
-}
-
-#[derive(Deserialize)]
-pub struct ChallengeRequest {
-    // TODO: Add if needed
-    // token: String,
-    pub challenge: String,
-}
-
-#[derive(Deserialize)]
-pub struct EventRequest {
-    // TODO: Add if needed
-    // token: String,
-    pub event: Event,
-}
-
-#[derive(Deserialize, Debug)]
-pub struct AppMentionEvent {
-    pub user: String,
-    pub text: String,
-    pub channel: String,
-}
-
-#[derive(Deserialize)]
-#[serde(tag = "type")]
-pub enum Event {
-    #[serde(rename = "app_mention")]
-    AppMentionEvent(AppMentionEvent)
-}
-
 #[derive(Deserialize, Debug)]
 pub struct Channel {
     pub id: String,
