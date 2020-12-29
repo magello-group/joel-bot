@@ -20,29 +20,39 @@ time_report:
     general:
       - "Hejsan allihopa, som den halvdassigt skrivna bot jag är, har jag som uppdrag att påminna er om följande:"
       - "Min elektroniska klocka har slagit, och det är dags att förmedla mitt budskap."
-      - "Tjenixen hoppas det är bra med alla!"
-      - "Hej alla kära medarbetare, hoppas ni som vanligt jobbar på lite enklare och mycket smartare."
+      - "Blipp Blopp Tjolahopp, jag är en bot så jag har inget annat att spendera mina klockcykler på än att skriva:"
+      - "Hej alla kära medarbetare, hoppas ni som vanligt jobbar lite enklare och mycket smartare."
+      - "System.out.println(\"Hej\");... Trodde ni va? Jag är ju skriven i det alltför maxade språket Rust, så snarare println!(\"{}\", \"Hej\");"
+      - "Sex laxar i en laxask. Se... det var inte så svårt."
     1:
       - "Ring in det nya och ring ut det gamla i årets första, skälvande månad."
     3:
       - "A men tjenare! Denna månad har jag ett meddelande från självaste påskharen:"
     12:
-      - "Nu tindrar stjärnor i det blå i hus och fönster likaså och alla röda tomtar gå med vita skägg och luvor på."
+      - "Nu tindrar stjärnor i det blå, i hus och fönster likaså, och alla röda tomtar gå, med vita skägg och luvor på."
 
   middle:
     general:
+      - "Lägg ner pennorna och papprena, men packa inte ihop än. Först gäller det att rapportera din dyrbara tid."
       - "Det är sista arbetsdagen i månaden och det är dags att tidrapportera (っ◔◡◔)っ"
       - "Nu är det sista dagen att tidrapportera för denna månad."
       - "Ännu en månad börjar röra sig mot sitt slut, och i och med det är det dags att tidrapportera."
+      - "Tiden är kommen att tidsrapportera tiden i tidsrapporteringsrapporten. Tid i tid tid, tid tid tid rapport rapport."
     1:
       - "En sak som dock inte är nytt, är att det är slutet på månaden och det är dags att tidrapportera."
+    3:
+      - "Ditt påskägg är gömt i ett av milltimes djupaste projekt. Gå och leta, men glöm inte tidsrapporten"
     12:
-      - "Från djupet av min cpu till er alla: Kom ihåg att tidrapportera!"
+      - "Från djupet av min beräkningsmodul: Kom ihåg att rapportera era tider för för en God Jul!"
 
   end:
     general:
       - "Tack och hej! ¯\\_(ツ)_/¯"
       - "Det var allt för mig, hej då allihopa!"
       - "Over and out!"
+      - "process::exit(1);"
+      - "Mic-drop"
+    3:
+      - "Ho ho ho... nej det är ju tomten som säger. Har har hare :joel:"
     12:
       - "Gott Nytt År! Önskar joel-bot"
