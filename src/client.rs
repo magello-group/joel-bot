@@ -27,6 +27,12 @@ pub struct SlackClient {
     token: String,
 }
 
+pub trait SlackClientTrait {
+    fn get_channel_id_by_name(&self, channel_name: &str) -> Option<String>;
+    fn get_channels(&self) -> Result<Vec<Channel>, Box<dyn Error>>;
+    fn post_message(&self, channel_id: &str, message: &str) -> Result<(), Box<dyn Error>>;
+}
+
 impl SlackClient {
     pub fn new() -> Result<SlackClient, Box<dyn Error>> {
         let token = std::env::var("JOEL_BOT_SLACK_TOKEN")?;
@@ -35,8 +41,10 @@ impl SlackClient {
             token: String::from(token),
         })
     }
+}
 
-    pub fn get_channel_id_by_name(&self, channel_name: &str) -> Option<String> {
+impl SlackClientTrait for SlackClient {
+    fn get_channel_id_by_name(&self, channel_name: &str) -> Option<String> {
         match self.get_channels() {
             Ok(channels) => {
                 channels.iter().find(|&channel| {
@@ -51,7 +59,7 @@ impl SlackClient {
         }
     }
 
-    pub fn get_channels(&self) -> Result<Vec<Channel>, Box<dyn Error>> {
+    fn get_channels(&self) -> Result<Vec<Channel>, Box<dyn Error>> {
         let mut params = HashMap::new();
         params.insert("token", self.token.clone());
         params.insert("types", String::from("private_channel,public_channel"));
@@ -74,7 +82,7 @@ impl SlackClient {
         Ok(channels)
     }
 
-    pub fn post_message(&self, channel_id: &str, message: &str) -> Result<(), Box<dyn Error>> {
+    fn post_message(&self, channel_id: &str, message: &str) -> Result<(), Box<dyn Error>> {
         let mut params = HashMap::new();
 
         params.insert("token", self.token.as_str());

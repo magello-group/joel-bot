@@ -5,15 +5,16 @@ intro:
     - "Yo, allt väl hoppas jag? :joel:"
   about_me: "Mitt namn är joel-bot och jag har axlat @chikken's arbete nu när han inte längre finns ibland oss!\nJag kommer pliktskyldigt påminna er om att tidsrapportera sista arbetsdagen i månaden och kan även svara på frågor kring tidrapportering.\nNi kan läsa mig här: https://github.com/Pirayya/joel-bot"
   features:
+    - "/joel - prova! Bara du som ser!"
     - "tid - fråga mig om när ni ska tidsrapportera denna månaden"
     - "pricing - hur mycket kostar jag, alltså vad skulle det kosta att köra en on-premise joel-bot?"
     - "skribenter - mina skapare, _i bokstavsordning på efternamn_"
   credits:
     intro: "Ni kan skylla på dessa skinn om jag inte funkar!"
     names:
-      - "Joakim Anell (@an3ll)"
-      - "Fabian Eriksson (@fabulicious)"
-      - "Simon Olander (@simon)"
+      - "Joakim Anell (<@U142GKR27>)"
+      - "Fabian Eriksson (<@UFF5GMPBJ>)"
+      - "Simon Olander (<@U1FEF7PSN>)"
 
 time_report:
   beginning:
