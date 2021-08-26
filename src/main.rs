@@ -1,27 +1,24 @@
-#![feature(proc_macro_hygiene, decl_macro)]
+#![feature(proc_macro_hygiene, decl_macro, option_result_contains)]
 
 #[macro_use]
 extern crate rocket;
+extern crate chrono;
+extern crate chrono_tz;
 
 use std::time::Duration;
 
 use chrono::{Datelike, NaiveTime, Utc};
 use clokwerk::Interval::Weekday;
 use clokwerk::Scheduler;
-use rocket_contrib::json::Json;
 
-use crate::config::*;
-use crate::last_day::{get_last_workday, is_last_workday};
 use slack::client::*;
 use slack::events;
-use slack::events::{SlackRequest, SlackEvents};
-use rocket::State;
-use rocket::request::LenientForm;
-use std::thread;
-use reqwest::blocking::Client;
-use std::collections::HashMap;
-use std::error::Error;
-use rand::{thread_rng, Rng};
+
+use crate::api::{routes, SLApiKeys};
+use crate::config::*;
+use crate::last_day::{get_last_workday, is_last_workday};
+
+mod api;
 
 mod last_day;
 mod config;
@@ -31,6 +28,9 @@ fn main() {
         .expect("couldn't read configuration file");
     let client = SlackClient::new()
         .expect("couldn't initiate slack client");
+
+    let sl_api_keys = SLApiKeys::new()
+        .expect("sl api keys missing");
 
     // Run scheduler
     let mut scheduler = Scheduler::with_tz(chrono::Utc);
@@ -67,95 +67,14 @@ fn main() {
 
     // Start web server
     rocket::ignite()
-        .mount("/", routes![slack_request, time_report])
+        .mount("/", routes![
+            routes::slack_request,
+            routes::time_report,
+            routes::handle_trip_command
+        ])
         .manage(slack_events)
+        .manage(sl_api_keys)
         .launch();
-}
-
-#[post("/slack-request", format = "application/json", data = "<request>")]
-fn slack_request(state: State<SlackEvents>, request: Json<SlackRequest>) -> String {
-    state.handle_request(request.0)
-}
-
-// More information here: https://api.slack.com/interactivity/slash-commands
-#[derive(FromForm)]
-struct SlackSlashMessage {
-    // token: String, <-- We should save and validate this
-    // command: String, <-- can be used to check what command was used.
-    text: Option<String>,
-    response_url: String,
-}
-
-#[post("/time-report", format = "application/x-www-form-urlencoded", data = "<request>")]
-fn time_report(request: LenientForm<SlackSlashMessage>) -> String {
-    let response_url = request.response_url.clone();
-
-    let calculations = vec!["vänta", "beräknar", "processerar", "finurlar", "gnuggar halvledarna", "tömmer kvicksilver-depå"];
-
-    thread::spawn(move || {
-        let now = Utc::now();
-        let http_client = Client::new();
-        let mut map = HashMap::new();
-
-        match get_last_workday(&now) {
-            Ok(last_workday) => {
-                if last_workday == now.naive_utc().date() {
-                    map.insert("text", format!("Okej, jag har kikat i kalendern och det är först *{}* som du behöver tidrapportera!", last_workday));
-
-                    sleep_and_send_time_report_response(&http_client, &response_url, &map);
-
-                    let mut rng = thread_rng();
-                    for _ in 0..2 {
-                        let pos = rng.gen_range(0, calculations.len() - 1);
-
-                        map.insert("text", format!("... {}", calculations[pos]));
-
-                        sleep_and_send_time_report_response(&http_client, &response_url, &map);
-                    }
-
-                    map.insert("text", String::from("... det är ju idag!"));
-
-                    sleep_and_send_time_report_response(&http_client, &response_url, &map);
-                } else {
-                    map.insert("text", format!("Nu har jag gjort diverse uppslag och scrape:at nätet och det är inte förrän *{}* som du behöver tidrapportera!", last_workday));
-
-                    sleep_and_send_time_report_response(&http_client, &response_url, &map)
-                }
-            }
-            Err(error) => {
-                println!("failed to get last work day: {}", error);
-
-                map.insert("text", String::from("Misslyckades stenhårt..."));
-                sleep_and_send_time_report_response(&http_client, &response_url, &map)
-            }
-        };
-    });
-
-    format!("Ska ta en titt i kalendern...")
-}
-
-fn sleep_and_send_time_report_response(http_client: &Client, url: &String, map: &HashMap<&str, String>) {
-    // To "fool" the user that we are actually calculating something
-    thread::sleep(Duration::from_secs(2));
-
-    let resp = http_client.post(url.as_str())
-        .json(map)
-        .send();
-
-    match resp {
-        Ok(r) => {
-            if !r.status().is_success() {
-                println!("failed to send message, {}", r.status().as_str());
-                let result = r.text();
-                if result.is_ok() {
-                    println!("{}", result.unwrap());
-                }
-            }
-        }
-        Err(err) => {
-            println!("got exception while sending message: {}", err)
-        }
-    }
 }
 
 fn handle_mention_event(client: &impl SlackClientTrait, event: events::AppMentionEvent) -> String {

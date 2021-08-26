@@ -1,6 +1,6 @@
 [package]
 name = "joel-bot"
-version = "1.0.2"
+version = "1.0.5"
 authors = [
     "Fabian Eriksson <fabian.eriksson@r2m.se>",
     "Joakim Anell <an3ll@hotmail.com>",
@@ -18,8 +18,10 @@ path = "src/lib.rs"
 reqwest = { version = "0.10.9", features = ["blocking", "json"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.8.14"
+serde_json = "1.0"
 rocket = { version = "0.4.6" }
 rocket_contrib = { version = "0.4.6", default-features = false, features = ["json"] }
 chrono = "0.4.19"
+chrono-tz = "0.5.3"
 clokwerk = "0.3.3"
 rand = "0.7.3"
