@@ -52,7 +52,7 @@ impl Configuration {
     }
 
     pub fn get_introduction(&self) -> String {
-        let index = rand::thread_rng().gen_range(0, self.intro.greetings.len());
+        let index = rand::thread_rng().gen_range(0..self.intro.greetings.len());
         let greeting = &self.intro.greetings[index];
         let features = self.intro.features
             .iter()
@@ -78,7 +78,7 @@ impl Configuration {
             Some(part) => part
         };
 
-        let index = random.gen_range(0, part.len());
+        let index = random.gen_range(0..part.len());
 
         let string = &part[index];
 
