@@ -12,7 +12,7 @@ pub struct Channel {
 
 #[derive(Deserialize, Debug)]
 pub struct ResponseMetadata {
-    next_cursor: String
+    next_cursor: String,
 }
 
 #[derive(Deserialize, Debug)]
@@ -46,12 +46,10 @@ impl SlackClient {
 impl SlackClientTrait for SlackClient {
     fn get_channel_id_by_name(&self, channel_name: &str) -> Option<String> {
         match self.get_channels() {
-            Ok(channels) => {
-                channels.iter().find(|&channel| {
-                    channel.name == channel_name
-                })
-                    .map(|channel| { channel.id.clone() })
-            }
+            Ok(channels) => channels
+                .iter()
+                .find(|&channel| channel.name == channel_name)
+                .map(|channel| channel.id.clone()),
             Err(error) => {
                 println!("{}", error);
                 None
@@ -66,7 +64,9 @@ impl SlackClientTrait for SlackClient {
         let mut channels = Vec::new();
 
         loop {
-            let mut body: ChannelResponse = self.client.post("https://slack.com/api/conversations.list")
+            let mut body: ChannelResponse = self
+                .client
+                .post("https://slack.com/api/conversations.list")
                 .form(&params)
                 .send()?
                 .json()?;
@@ -89,7 +89,9 @@ impl SlackClientTrait for SlackClient {
         params.insert("channel", channel_id);
         params.insert("text", message);
 
-        let resp = self.client.post("https://slack.com/api/chat.postMessage")
+        let resp = self
+            .client
+            .post("https://slack.com/api/chat.postMessage")
             .form(&params)
             .send()?;
 

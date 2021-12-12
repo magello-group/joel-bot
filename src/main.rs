@@ -12,29 +12,28 @@ use rocket_contrib::json::Json;
 
 use crate::config::*;
 use crate::last_day::{get_last_workday, is_last_workday};
+use rand::{thread_rng, Rng};
+use reqwest::blocking::Client;
+use rocket::request::LenientForm;
+use rocket::State;
 use slack::client::*;
 use slack::events;
-use slack::events::{SlackRequest, SlackEvents};
-use rocket::State;
-use rocket::request::LenientForm;
-use std::thread;
-use reqwest::blocking::Client;
+use slack::events::{SlackEvents, SlackRequest};
 use std::collections::HashMap;
 use std::error::Error;
-use rand::{thread_rng, Rng};
+use std::thread;
 
-mod last_day;
 mod config;
+mod last_day;
 
 fn main() {
-    let config = Configuration::read()
-        .expect("couldn't read configuration file");
-    let client = SlackClient::new()
-        .expect("couldn't initiate slack client");
+    let config = Configuration::read().expect("couldn't read configuration file");
+    let client = SlackClient::new().expect("couldn't initiate slack client");
 
     // Run scheduler
     let mut scheduler = Scheduler::with_tz(chrono::Utc);
-    scheduler.every(Weekday)
+    scheduler
+        .every(Weekday)
         .at_time(NaiveTime::from_hms(9, 0, 0))
         .run(move || {
             let now = Utc::now();
@@ -48,7 +47,7 @@ fn main() {
                                 println!("couldn't post message: {}", error)
                             }
                         }
-                        None => println!("no channel with name 'allmant' found!")
+                        None => println!("no channel with name 'allmant' found!"),
                     }
                 }
                 Ok(false) => {
@@ -86,11 +85,22 @@ struct SlackSlashMessage {
     response_url: String,
 }
 
-#[post("/time-report", format = "application/x-www-form-urlencoded", data = "<request>")]
+#[post(
+    "/time-report",
+    format = "application/x-www-form-urlencoded",
+    data = "<request>"
+)]
 fn time_report(request: LenientForm<SlackSlashMessage>) -> String {
     let response_url = request.response_url.clone();
 
-    let calculations = vec!["vänta", "beräknar", "processerar", "finurlar", "gnuggar halvledarna", "tömmer kvicksilver-depå"];
+    let calculations = vec![
+        "vänta",
+        "beräknar",
+        "processerar",
+        "finurlar",
+        "gnuggar halvledarna",
+        "tömmer kvicksilver-depå",
+    ];
 
     thread::spawn(move || {
         let now = Utc::now();
@@ -134,13 +144,15 @@ fn time_report(request: LenientForm<SlackSlashMessage>) -> String {
     format!("Ska ta en titt i kalendern...")
 }
 
-fn sleep_and_send_time_report_response(http_client: &Client, url: &String, map: &HashMap<&str, String>) {
+fn sleep_and_send_time_report_response(
+    http_client: &Client,
+    url: &String,
+    map: &HashMap<&str, String>,
+) {
     // To "fool" the user that we are actually calculating something
     thread::sleep(Duration::from_secs(2));
 
-    let resp = http_client.post(url.as_str())
-        .json(map)
-        .send();
+    let resp = http_client.post(url.as_str()).json(map).send();
 
     match resp {
         Ok(r) => {
@@ -159,8 +171,7 @@ fn sleep_and_send_time_report_response(http_client: &Client, url: &String, map: 
 }
 
 fn handle_mention_event(client: &impl SlackClientTrait, event: events::AppMentionEvent) -> String {
-    let config = Configuration::read()
-        .expect("couldn't read configuration when mentioned");
+    let config = Configuration::read().expect("couldn't read configuration when mentioned");
 
     let mut splits: Vec<&str> = event.text.split(" ").collect();
     splits.drain(0..1);
@@ -196,7 +207,8 @@ fn handle_mention_event(client: &impl SlackClientTrait, event: events::AppMentio
     } else {
         config.get_introduction()
     };
-    client.post_message(&event.channel, &message)
+    client
+        .post_message(&event.channel, &message)
         .unwrap_or_else(|error| println!("{}", error));
 
     String::new()

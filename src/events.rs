@@ -1,6 +1,6 @@
+use crate::client::SlackClient;
 use serde::Deserialize;
 use std::sync::atomic::{AtomicPtr, Ordering};
-use crate::client::SlackClient;
 
 #[derive(Deserialize)]
 #[serde(tag = "type")]
@@ -36,7 +36,7 @@ pub struct AppMentionEvent {
 #[serde(tag = "type")]
 pub enum Event {
     #[serde(rename = "app_mention")]
-    AppMentionEvent(AppMentionEvent)
+    AppMentionEvent(AppMentionEvent),
 }
 
 pub struct SlackEvents {
@@ -59,7 +59,8 @@ impl SlackEvents {
     }
 
     fn handle_challenge_request(&self, request: ChallengeRequest) -> String {
-        self.token.store(&mut String::from(request.token), Ordering::Relaxed);
+        self.token
+            .store(&mut String::from(request.token), Ordering::Relaxed);
 
         request.challenge
     }
@@ -68,14 +69,16 @@ impl SlackEvents {
         // TODO: Verify the token then allow the request.
 
         match req.event {
-            Event::AppMentionEvent(event) => (self.app_mention_event_handler)(&self.slack_client, event),
+            Event::AppMentionEvent(event) => {
+                (self.app_mention_event_handler)(&self.slack_client, event)
+            }
         }
     }
 
     pub fn handle_request(&self, request: SlackRequest) -> String {
         match request {
             SlackRequest::Challenge(request) => self.handle_challenge_request(request),
-            SlackRequest::Event(request) => self.verify_event_then_call(request)
+            SlackRequest::Event(request) => self.verify_event_then_call(request),
         }
     }
 }
