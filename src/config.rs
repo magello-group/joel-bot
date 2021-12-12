@@ -36,7 +36,10 @@ pub struct Credits {
 
 impl Configuration {
     pub fn get_authors(&self) -> String {
-        let names = self.intro.credits.names
+        let names = self
+            .intro
+            .credits
+            .names
             .iter()
             .map(|name| format!("\t- {}", name))
             .collect::<Vec<String>>()
@@ -54,14 +57,19 @@ impl Configuration {
     pub fn get_introduction(&self) -> String {
         let index = rand::thread_rng().gen_range(0..self.intro.greetings.len());
         let greeting = &self.intro.greetings[index];
-        let features = self.intro.features
+        let features = self
+            .intro
+            .features
             .iter()
             .map(|feature| format!("\t- {}", feature))
             .collect::<Vec<String>>()
             .join("\n");
 
         // Sexiest line of code everest!
-        format!("{}\n\n{}\n\nSaker ni kan fråga (med `@joel-bot <kommando>`:\n{}", greeting, self.intro.about_me, features)
+        format!(
+            "{}\n\n{}\n\nSaker ni kan fråga (med `@joel-bot <kommando>`:\n{}",
+            greeting, self.intro.about_me, features
+        )
     }
 
     pub fn read() -> Result<Configuration, Box<dyn Error>> {
@@ -75,7 +83,7 @@ impl Configuration {
 
         let part = match part.get(context) {
             None => part.get("general").unwrap(),
-            Some(part) => part
+            Some(part) => part,
         };
 
         let index = random.gen_range(0..part.len());
@@ -85,4 +93,3 @@ impl Configuration {
         string.clone()
     }
 }
-
