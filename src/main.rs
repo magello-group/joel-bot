@@ -20,7 +20,6 @@ use slack::client::*;
 use slack::events;
 use slack::events::{SlackEvents, SlackRequest};
 use std::collections::HashMap;
-use std::error::Error;
 use std::thread;
 
 mod config;
