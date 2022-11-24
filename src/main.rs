@@ -7,7 +7,7 @@ use std::time::Duration;
 
 use chrono::{Datelike, NaiveTime, Utc};
 use clokwerk::Interval::Weekday;
-use clokwerk::Scheduler;
+use clokwerk::{Job, Scheduler};
 use rocket_contrib::json::Json;
 
 use crate::config::*;
@@ -30,10 +30,10 @@ fn main() {
     let client = SlackClient::new().expect("couldn't initiate slack client");
 
     // Run scheduler
-    let mut scheduler = Scheduler::with_tz(chrono::Utc);
+    let mut scheduler = Scheduler::with_tz(Utc);
     scheduler
         .every(Weekday)
-        .at_time(NaiveTime::from_hms(9, 0, 0))
+        .at_time(NaiveTime::from_hms_opt(9, 0, 0).unwrap())
         .run(move || {
             let now = Utc::now();
             match is_last_workday(&now) {
