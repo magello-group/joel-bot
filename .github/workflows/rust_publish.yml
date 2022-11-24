@@ -26,7 +26,8 @@ jobs:
 
     - name: Get version from github ref
       id: get_version
-      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+      run: echo "{VERSION}={${GITHUB_REF/refs\/tags\//}}" >> $GITHUB_OUTPUT
+
 
     - name: Build and push
       uses: docker/build-push-action@v3
@@ -42,7 +43,7 @@ jobs:
     steps:
     - name: Get version from github ref
       id: get_version
-      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+      run: echo "{VERSION}={${GITHUB_REF/refs\/tags\//}}" >> $GITHUB_OUTPUT
 
     - name: Login via Azure CLI
       uses: azure/login@v1
