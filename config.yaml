@@ -24,8 +24,9 @@ time_report:
       - "Min elektroniska klocka har slagit, och det är dags att förmedla mitt budskap."
       - "Blipp Blopp Tjolahopp, jag är en bot så jag har inget annat att spendera mina klockcykler på än att skriva:"
       - "Hej alla kära medarbetare, hoppas ni som vanligt jobbar lite enklare och mycket smartare."
-      - "System.out.println(\"Hej\");... Trodde ni va? Jag är ju skriven i det alltför maxade språket Rust, så snarare println!(\"{}\", \"Hej\");"
+      - "`System.out.println(\"Hej\");`... Trodde ni va? Jag är ju skriven i det alltför maxade språket Rust, så snarare `println!(\"{}\", \"Hej\");`"
       - "Sex laxar i en laxask. Se... det var inte så svårt."
+      - "Hejsan hoppsan kära kollegor, jag är här åter igen och söker efter er uppmärksamhet."
     1:
       - "Ring in det nya och ring ut det gamla i årets första, skälvande månad."
     3:
@@ -45,7 +46,7 @@ time_report:
     3:
       - "Ditt påskägg är gömt i ett av milltimes djupaste projekt. Gå och leta, men glöm inte tidsrapporten"
     12:
-      - "Från djupet av min beräkningsmodul: Kom ihåg att rapportera era tider för en God Jul!"
+      - "Från djupet av min beräkningsmodul: Kom ihåg att rapportera era tider för en God Jul! 🎅🎄"
 
   end:
     general:
@@ -53,8 +54,8 @@ time_report:
       - "Det var allt för mig, hej då allihopa!"
       - "Over and out!"
       - "process::exit(1);"
-      - "Mic-drop"
+      - "Mic-drop 🖐️🎤"
     3:
-      - "Ho ho ho... nej det är ju tomten som säger. Har har hare :joel:"
+      - "Ho ho ho... nej det är ju tomten som säger. Har har hare 🐇🥚 :joel:"
     12:
-      - "Gott Nytt År! Önskar joel-bot"
+      - "Gott Nytt År! Önskar joel-bot 🎆"
