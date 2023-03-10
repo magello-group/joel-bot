@@ -1,4 +1,4 @@
-FROM rust:1.68.0-buster as builder
+FROM rust:1.68.0-slim-buster as builder
 
 RUN rustup override set nightly
 
@@ -11,7 +11,8 @@ WORKDIR /joel-bot
 # RUN cargo install
 RUN cargo build --release
 
-FROM debian:buster
+FROM debian:slim-buster
+
 COPY --from=builder /joel-bot/target/release/joel-bot /joel-bot
 COPY config.yaml Rocket.toml /
 RUN apt update
