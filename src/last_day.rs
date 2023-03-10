@@ -57,24 +57,24 @@ mod test {
 
     #[test]
     fn is_2020_10_31_last_work_day() {
-        let date = Utc.ymd(2020, 10, 31).and_hms(0, 0, 0);
-        let is_last = is_last_workday(&date).expect("failed");
+        let date = Utc.with_ymd_and_hms(2020, 10, 31, 0, 0, 0);
+        let is_last = is_last_workday(&date.unwrap()).expect("failed");
 
         assert!(!is_last)
     }
 
     #[test]
     fn is_2020_10_30_last_work_day() {
-        let date = Utc.ymd(2020, 10, 30).and_hms(0, 0, 0);
-        let is_last = is_last_workday(&date).expect("failed");
+        let date = Utc.with_ymd_and_hms(2020, 10, 30, 0, 0, 0);
+        let is_last = is_last_workday(&date.unwrap()).expect("failed");
 
         assert!(is_last)
     }
 
     #[test]
     fn is_2020_10_29_last_work_day() {
-        let date = Utc.ymd(2020, 10, 29).and_hms(0, 0, 0);
-        let is_last = is_last_workday(&date).expect("failed");
+        let date = Utc.with_ymd_and_hms(2020, 10, 29, 0, 0, 0);
+        let is_last = is_last_workday(&date.unwrap()).expect("failed");
 
         assert!(!is_last)
     }
