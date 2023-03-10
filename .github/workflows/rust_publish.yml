@@ -54,7 +54,7 @@ jobs:
       uses: azure/webapps-deploy@v2
       with:
         app-name: joel-bot
-        images: magelluhub/joel-bot:${{ steps.get_version.outputs.VERSION }}
+        images: magellohub/joel-bot:${{ steps.get_version.outputs.VERSION }}
 
     - name: Azure logout
       run: |
