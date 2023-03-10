@@ -3,24 +3,25 @@
 #[macro_use]
 extern crate rocket;
 
+use std::collections::HashMap;
+use std::thread;
 use std::time::Duration;
 
 use chrono::{Datelike, NaiveTime, Utc};
 use clokwerk::Interval::Weekday;
 use clokwerk::{Job, Scheduler};
-use rocket_contrib::json::Json;
-
-use crate::config::*;
-use crate::last_day::{get_last_workday, is_last_workday};
 use rand::{thread_rng, Rng};
 use reqwest::blocking::Client;
 use rocket::request::LenientForm;
 use rocket::State;
+use rocket_contrib::json::Json;
+
 use slack::client::*;
 use slack::events;
 use slack::events::{SlackEvents, SlackRequest};
-use std::collections::HashMap;
-use std::thread;
+
+use crate::config::*;
+use crate::last_day::{get_last_workday, is_last_workday};
 
 mod config;
 mod last_day;
@@ -60,7 +61,7 @@ fn main() {
     let _schedule_handle = scheduler.watch_thread(Duration::from_secs(60));
 
     // Setup slack_events handler
-    let mut slack_events = events::SlackEvents::new();
+    let mut slack_events = SlackEvents::new();
     slack_events.set_mention_event_handler(handle_mention_event);
 
     // Start web server

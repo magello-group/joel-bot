@@ -4,6 +4,8 @@ use std::error::Error;
 use reqwest::blocking::Client;
 use serde::Deserialize;
 
+use custom_error::custom_error;
+
 #[derive(Deserialize, Debug)]
 pub struct Channel {
     pub id: String,
@@ -31,6 +33,10 @@ pub trait SlackClientTrait {
     fn get_channel_id_by_name(&self, channel_name: &str) -> Option<String>;
     fn get_channels(&self) -> Result<Vec<Channel>, Box<dyn Error>>;
     fn post_message(&self, channel_id: &str, message: &str) -> Result<(), Box<dyn Error>>;
+}
+
+custom_error! {SlackError
+     CommunicationError{status_code: String} = "could not post to stack, status code '{status_code}'",
 }
 
 impl SlackClient {
@@ -98,7 +104,9 @@ impl SlackClientTrait for SlackClient {
         if resp.status().is_success() {
             Ok(())
         } else {
-            Err(resp.status().as_str().into())
+            Err(Box::new(SlackError::CommunicationError {
+                status_code: resp.status().to_string(),
+            }))
         }
     }
 }
