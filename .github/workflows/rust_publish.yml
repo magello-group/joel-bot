@@ -33,7 +33,7 @@ jobs:
       uses: docker/build-push-action@v4
       with:
         push: true
-        tags: r2mhub/joel-bot:${{ steps.get_version.outputs.VERSION }}
+        tags: magellohub/joel-bot:${{ steps.get_version.outputs.VERSION }}
 
   deploy:
     runs-on: ubuntu-latest
@@ -54,7 +54,7 @@ jobs:
       uses: azure/webapps-deploy@v2
       with:
         app-name: joel-bot
-        images: r2mhub/joel-bot:${{ steps.get_version.outputs.VERSION }}
+        images: magelluhub/joel-bot:${{ steps.get_version.outputs.VERSION }}
 
     - name: Azure logout
       run: |
