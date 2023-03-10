@@ -16,11 +16,11 @@ path = "src/lib.rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-reqwest = { version = "0.11.12", features = ["blocking", "json"] }
+reqwest = { version = "0.11.14", features = ["blocking", "json"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.9.19"
 rocket = { version = "0.4.11" }
 rocket_contrib = { version = "0.4.11", default-features = false, features = ["json"] }
-chrono = "0.4.22"
+chrono = "0.4.23"
 clokwerk = "0.4.0"
 rand = "0.8.5"
