@@ -38,7 +38,7 @@ fn main() {
             let now = Utc::now();
             match is_last_workday(&now) {
                 Ok(true) => {
-                    let context = now.date().month().to_string();
+                    let context = now.date_naive().month().to_string();
                     let message = config.get_message(&context);
                     match client.get_channel_id_by_name("allmant") {
                         Some(channel_id) => {
