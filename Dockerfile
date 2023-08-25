@@ -1,4 +1,4 @@
-FROM rust:1.71.1-buster as builder
+FROM rust:1.72.0-buster as builder
 
 RUN rustup override set nightly
 
