@@ -51,7 +51,7 @@ jobs:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
     - name: Deploy joel-bot
-      uses: azure/webapps-deploy@v2
+      uses: azure/webapps-deploy@v3
       with:
         app-name: joel-bot
         images: r2mhub/joel-bot:${{ steps.get_version.outputs.VERSION }}
