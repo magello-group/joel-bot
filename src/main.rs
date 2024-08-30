@@ -115,7 +115,7 @@ fn time_report(request: LenientForm<SlackSlashMessage>) -> String {
 
                     let mut rng = thread_rng();
                     for _ in 0..2 {
-                        let pos = rng.gen_range(0..calculations.len() - 1);
+                        let pos = rng.gen_range(0..calculations.len());
 
                         map.insert("text", format!("... {}", calculations[pos]));
 
