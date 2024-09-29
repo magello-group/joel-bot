@@ -8,14 +8,14 @@ use std::time::Duration;
 use chrono::{Datelike, NaiveTime, Utc};
 use clokwerk::Interval::Weekday;
 use clokwerk::{Job, Scheduler};
-use rocket_contrib::json::Json;
 
 use crate::config::*;
 use crate::last_day::{get_last_workday, is_last_workday};
 use rand::{thread_rng, Rng};
 use reqwest::blocking::Client;
-use rocket::request::LenientForm;
+use rocket::form::Form;
 use rocket::State;
+use rocket::serde::{json::Json, Deserialize};
 use slack::client::*;
 use slack::events;
 use slack::events::{SlackEvents, SlackRequest};
@@ -25,7 +25,8 @@ use std::thread;
 mod config;
 mod last_day;
 
-fn main() {
+#[rocket::main]
+async fn main() {
     let config = Configuration::read().expect("couldn't read configuration file");
     let client = SlackClient::new().expect("couldn't initiate slack client");
 
@@ -64,15 +65,18 @@ fn main() {
     slack_events.set_mention_event_handler(handle_mention_event);
 
     // Start web server
-    rocket::ignite()
-        .mount("/", routes![slack_request, time_report])
+    rocket::build()
         .manage(slack_events)
-        .launch();
+        .mount("/", routes![slack_request, time_report])
+        .launch()
+        .await
+        .expect("Server failed to start");
 }
 
 #[post("/slack-request", format = "application/json", data = "<request>")]
-fn slack_request(state: State<SlackEvents>, request: Json<SlackRequest>) -> String {
-    state.handle_request(request.0)
+async fn slack_request(state: &State<SlackEvents>, request: Json<SlackRequest>) -> String {
+    let slack_request_data = request.into_inner();
+    state.handle_request(slack_request_data)
 }
 
 // More information here: https://api.slack.com/interactivity/slash-commands
@@ -89,7 +93,7 @@ struct SlackSlashMessage {
     format = "application/x-www-form-urlencoded",
     data = "<request>"
 )]
-fn time_report(request: LenientForm<SlackSlashMessage>) -> String {
+fn time_report(request: Form<SlackSlashMessage>) -> String {
     let response_url = request.response_url.clone();
 
     let calculations = vec![
