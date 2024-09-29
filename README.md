@@ -2,16 +2,6 @@
 
 Här ska vi skriva funktionalitet så småningom, men det är dag tre kl 17:43 så vi avbryter nu.
 
-## Requirements
-
-To build this project you currently need `rust-nightly`, as the dependency `rocket` requires it.
-
-It can be set in the project as following:
-
-```console
-rustup override set nightly
-```
-
 ## Building
 
 Simply build with cargo:
