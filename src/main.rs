@@ -103,6 +103,10 @@ fn time_report(request: Form<SlackSlashMessage>) -> String {
         "finurlar",
         "gnuggar halvledarna",
         "tömmer kvicksilver-depå",
+        "springer i cirklar",
+        "kryssar och jämför",
+        "skruvar och muttrar",
+        "går på djupet",
     ];
 
     thread::spawn(move || {
