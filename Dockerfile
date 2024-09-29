@@ -17,7 +17,7 @@ COPY ./src ./src
 
 # Update packages and emsure necessary dependencies
 RUN apt update && \
-    apt install -y libssl-dev ca-certificates && \
+    apt install -y libssl-dev ca-certificates pkg-config && \
     rm -rf /var/lib/apt/lists/*
 
 # Build the project in release mode
@@ -33,7 +33,7 @@ COPY config.yaml Rocket.toml /
 
 # Update packages and install necessary dependencies
 RUN apt update && \
-    apt install -y libssl-dev ca-certificates && \
+    apt install -y libssl-dev ca-certificates pkg-config && \
     rm -rf /var/lib/apt/lists/*
 
 # Set the Rocket environment to production
