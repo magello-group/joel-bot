@@ -1,22 +1,43 @@
-FROM rust:1.79.0-slim-buster as builder
+# Stage 1: Build the Rust project
+FROM rust:slim-bookworm as builder
 
-RUN rustup override set nightly
+# Set the default toolchain to stable
+RUN rustup default stable
 
-RUN mkdir -p /joel-bot
-
-COPY Cargo.toml Cargo.lock /joel-bot/
-COPY ./src /joel-bot/src
+# Create a directory for the project
 WORKDIR /joel-bot
 
-# RUN cargo install
+# Copy the cargo files and download dependencies
+# This helps leverage Docker's layer caching
+COPY Cargo.toml Cargo.lock ./
+RUN cargo fetch
+
+# Copy the source code
+COPY ./src ./src
+
+# Update packages and emsure necessary dependencies
+RUN apt update && \
+    apt install -y libssl-dev ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+# Build the project in release mode
 RUN cargo build --release
 
-FROM debian:buster
+# Stage 2: Create a minimalistic image with the built binary
+FROM debian:bookworm-slim
+
+# Copy the binary from the builder stage
 COPY --from=builder /joel-bot/target/release/joel-bot /joel-bot
+# Copy configuration files
 COPY config.yaml Rocket.toml /
-RUN apt update
-RUN apt install libssl-dev ca-certificates -y
 
-ENV ROCKET_ENV production
+# Update packages and install necessary dependencies
+RUN apt update && \
+    apt install -y libssl-dev ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
 
+# Set the Rocket environment to production
+ENV ROCKET_ENV=production
+
+# Set the start command for the container
 CMD ["/joel-bot"]
