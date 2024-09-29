@@ -74,7 +74,7 @@ async fn main() {
 }
 
 #[post("/slack-request", format = "application/json", data = "<request>")]
-async fn slack_request(state: &State<SlackEvents>, request: Json<SlackRequest>) -> String {
+fn slack_request(state: &State<SlackEvents>, request: Json<SlackRequest>) -> String {
     let slack_request_data = request.into_inner();
     state.handle_request(slack_request_data)
 }
