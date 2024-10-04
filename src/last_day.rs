@@ -1,7 +1,7 @@
 use std::error::Error;
 
-use chrono::{DateTime, Datelike, NaiveDate, Utc};
-use reqwest::blocking::Client;
+use chrono::{Datelike, NaiveDate};
+use reqwest::Client;
 use serde::Deserialize;
 
 #[derive(Deserialize)]
@@ -23,11 +23,12 @@ struct SholidayFaboulDay {
     work_free_day: String,
 }
 
-pub fn is_last_workday(date: &DateTime<Utc>) -> Result<bool, Box<dyn Error>> {
-    Ok(get_last_workday(date)? == date.naive_utc().date())
+
+pub async fn is_last_workday(date: &NaiveDate) -> Result<bool, Box<dyn Error>> {
+    Ok(get_last_workday(date).await? == *date)
 }
 
-pub fn get_last_workday(date: &DateTime<Utc>) -> Result<NaiveDate, Box<dyn Error>> {
+pub async fn get_last_workday(date: &NaiveDate) -> Result<NaiveDate, Box<dyn Error>> {
     let client = Client::new();
     let url = format!(
         "https://sholiday.faboul.se/dagar/v2.1/{}/{}",
@@ -35,7 +36,7 @@ pub fn get_last_workday(date: &DateTime<Utc>) -> Result<NaiveDate, Box<dyn Error
         date.month()
     );
 
-    let response: SholidayFaboulResponse = client.get(url.as_str()).send()?.json()?;
+    let response: SholidayFaboulResponse = client.get(url.as_str()).send().await?.json().await?;
 
     let last_work_day = response
         .days
@@ -46,36 +47,47 @@ pub fn get_last_workday(date: &DateTime<Utc>) -> Result<NaiveDate, Box<dyn Error
     let sholiday_day_date =
         NaiveDate::parse_from_str(last_work_day.date.clone().as_str(), "%Y-%m-%d")?;
 
-    return Ok(sholiday_day_date);
+    Ok(sholiday_day_date)
 }
 
 #[cfg(test)]
 mod test {
-    use chrono::{TimeZone, Utc};
+    use chrono::{NaiveDate, TimeZone, Utc};
+    use tokio;
 
-    use crate::last_day::is_last_workday;
+    use super::{is_last_workday, get_last_workday};
 
-    #[test]
-    fn is_2020_10_31_last_work_day() {
-        let date = Utc.with_ymd_and_hms(2020, 10, 31, 0, 0, 0).unwrap();
-        let is_last = is_last_workday(&date).expect("failed");
+    #[tokio::test]
+    async fn is_2020_10_31_last_work_day() {
+        let date = NaiveDate::from_ymd_opt(2020, 10, 31).unwrap();
+        let is_last = is_last_workday(&date).await.expect("failed");
 
         assert!(!is_last)
     }
 
-    #[test]
-    fn is_2020_10_30_last_work_day() {
-        let date = Utc.with_ymd_and_hms(2020, 10, 30, 0, 0, 0).unwrap();
-        let is_last = is_last_workday(&date).expect("failed");
+    #[tokio::test]
+    async fn is_2020_10_30_last_work_day() {
+        let date = NaiveDate::from_ymd_opt(2020, 10, 30).unwrap();
+        let is_last = is_last_workday(&date).await.expect("failed");
 
         assert!(is_last)
     }
 
-    #[test]
-    fn is_2020_10_29_last_work_day() {
-        let date = Utc.with_ymd_and_hms(2020, 10, 29, 0, 0, 0).unwrap();
-        let is_last = is_last_workday(&date).expect("failed");
+    #[tokio::test]
+    async fn is_2020_10_29_last_work_day() {
+        let date = NaiveDate::from_ymd_opt(2020, 10, 29).unwrap();
+        let is_last = is_last_workday(&date).await.expect("failed");
 
         assert!(!is_last)
+    }
+
+    #[tokio::test]
+    async fn test_get_last_workday() {
+        let date = NaiveDate::from_ymd_opt(2020, 10, 31).unwrap();
+        let last_workday = get_last_workday(&date).await.expect("failed");
+
+        // 2020-10-30 was a Friday, and therefore the last workday of October 2020
+        let expected_last_workday = Utc.with_ymd_and_hms(2020, 10, 30, 0, 0, 0).unwrap().date_naive();
+        assert_eq!(last_workday, expected_last_workday);
     }
 }
