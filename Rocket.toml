@@ -1,26 +1,16 @@
-[development]
-address = "localhost"
-port = 8000
-keep_alive = 5
-read_timeout = 5
-write_timeout = 5
-log = "normal"
-limits = { forms = 32768 }
-
-[staging]
+## defaults for _all_ profiles
+[default]
 address = "0.0.0.0"
-port = 8000
-keep_alive = 5
-read_timeout = 5
-write_timeout = 5
-log = "normal"
-limits = { forms = 32768 }
+limits = { form = "64 kB", json = "10 MiB" }
 
-[production]
-address = "0.0.0.0"
+## set only when compiled in debug mode, i.e, `cargo build`
+[debug]
+port = 8000
+## only the `json` key from `default` will be overridden; `form` will remain
+limits = { json = "10MiB" }
+
+
+## set only when compiled in release mode, i.e, `cargo build --release`
+[release]
 port = 80
-keep_alive = 5
-read_timeout = 5
-write_timeout = 5
-log = "critical"
-limits = { forms = 32768 }
+ip_header = false
