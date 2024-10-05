@@ -1,11 +1,12 @@
 [package]
 name = "joel-bot"
-version = "1.0.2"
+version = "2.0.0"
 authors = [
     "Fabian Eriksson <fabian.eriksson@magello.se>",
     "Joakim Anell <an3ll@hotmail.com>",
     "Simon Olander <supersimon@spray.se>",
-    "Petter Salminen <kemikaze+github@gmail.com>",
+    "Petter Salminen <petter.salminen@magello.se>",
+    "Eric von Knorring <eric.von.knorring@magello.se>",
 ]
 edition = "2021"
 
