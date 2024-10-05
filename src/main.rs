@@ -1,31 +1,25 @@
 #[macro_use]
 extern crate rocket;
-use crate::last_day::{is_last_workday, get_last_workday};
+use crate::last_day::{get_last_workday, is_last_workday};
 use rand::SeedableRng;
 
 use std::time::Duration;
 
 use chrono::{Datelike, NaiveTime, Utc};
 use clokwerk::Interval::Weekday;
-use clokwerk::{AsyncScheduler, Job, Scheduler};
+use clokwerk::{AsyncScheduler, Job};
 
 use crate::config::*;
 use rand::rngs::SmallRng;
-use rand::{thread_rng, Rng};
+use rand::Rng;
 use reqwest::Client;
 use rocket::form::Form;
-use rocket::futures::future::BoxFuture;
-use rocket::futures::FutureExt;
 use rocket::response::status::Accepted;
 use rocket::serde::json::Json;
 use rocket::State;
 use slack::client::*;
-use slack::events;
 use slack::events::{SlackRequest, SlackState};
 use std::collections::HashMap;
-use std::error::Error;
-use std::future::Future;
-use std::pin::Pin;
 use std::sync::Arc;
 use tokio::time::sleep;
 
@@ -42,29 +36,7 @@ async fn main() {
     scheduler
         .every(Weekday)
         .at_time(NaiveTime::from_hms_opt(9, 0, 0).unwrap())
-        .run(move || {
-            let config = config.clone();
-            let client = client.clone();
-            Box::pin(async move {
-                let today = Utc::now().date_naive();
-                match is_last_workday(&today).await {
-                    Ok(true) => {
-                        let context = today.month().to_string();
-                        let message = config.get_message(&context);
-                        match client.get_channel_id_by_name("allmant").await {
-                            Some(channel_id) => {
-                                if let Err(error) = client.post_message(&channel_id, &message).await {
-                                    println!("couldn't post message: {}", error)
-                                }
-                            }
-                            None => println!("no channel with name 'allmant' found!"),
-                        }
-                    }
-                    Ok(false) => println!("Not last work day"),
-                    _ => {}
-                }
-            }) as Pin<Box<dyn Future<Output = ()> + Send>>
-        });
+        .run(move || last_workday_message(config.clone(), client.clone()));
 
     tokio::spawn(async move {
         loop {
@@ -85,6 +57,28 @@ async fn main() {
         .expect("Server failed to start");
 }
 
+async fn last_workday_message(config: Arc<Configuration>, client: Arc<SlackClient>) {
+    let today = Utc::now().date_naive();
+    match is_last_workday(&today).await {
+        Ok(true) => {
+            let context = today.month().to_string();
+            let message = config.get_message(&context);
+            match client.get_channel_id_by_name("allmant").await {
+                Some(channel_id) => {
+                    if let Err(error) = client.post_message(&channel_id, &message).await {
+                        println!("couldn't post message: {}", error)
+                    }
+                }
+                None => println!("no channel with name 'allmant' found!"),
+            }
+        }
+        Ok(false) => println!("Not last work day"),
+        Err(_) => {
+            // TODO Maybe handle error or nah?
+        }
+    };
+}
+
 #[post("/slack-request", format = "application/json", data = "<request>")]
 async fn slack_request(state: &State<SlackState>, request: Json<SlackRequest>) -> String {
     let slack_request_data = request.into_inner();
@@ -96,7 +90,7 @@ async fn slack_request(state: &State<SlackState>, request: Json<SlackRequest>) -
 struct SlackSlashMessage {
     // token: String, <-- We should save and validate this
     // command: String, <-- can be used to check what command was used.
-    text: Option<String>,
+    // text: Option<String>,
     response_url: String,
 }
 
@@ -108,7 +102,7 @@ struct SlackSlashMessage {
 async fn time_report(request: Form<SlackSlashMessage>) -> Accepted<String> {
     let response_url = request.response_url.clone();
 
-    let calculations = vec![
+    let calculations = [
         "vänta",
         "beräknar",
         "processerar",

@@ -1,10 +1,8 @@
-use rocket::futures::FutureExt;
 use std::collections::HashMap;
-use std::error::Error;
 
-use reqwest::Client;
-use serde::de::StdError;
+use reqwest::{Client};
 use serde::Deserialize;
+use anyhow::Result;
 
 #[derive(Deserialize, Debug)]
 pub struct Channel {
@@ -33,12 +31,12 @@ pub struct SlackClient {
 #[async_trait::async_trait]
 pub trait SlackClientTrait {
     async fn get_channel_id_by_name(&self, channel_name: &str) -> Option<String>;
-    async fn get_channels(&self) -> Result<Vec<Channel>, Box<dyn Error>>;
-    async fn post_message(&self, channel_id: &str, message: &str) -> Result<(), Box<dyn Error>>;
+    async fn get_channels(&self) -> Result<Vec<Channel>>;
+    async fn post_message(&self, channel_id: &str, message: &str) -> Result<()>;
 }
 
 impl SlackClient {
-    pub fn new() -> Result<SlackClient, Box<dyn Error>> {
+    pub fn new() -> Result<SlackClient> {
         let token = std::env::var("JOEL_BOT_SLACK_TOKEN")?;
         Ok(SlackClient {
             client: Client::new(),
@@ -62,7 +60,7 @@ impl SlackClientTrait for SlackClient {
         }
     }
 
-    async fn get_channels(&self) -> Result<Vec<Channel>, Box<dyn Error>> {
+    async fn get_channels(&self) -> Result<Vec<Channel>> {
         let mut params = HashMap::new();
         params.insert("token", self.token.clone());
         params.insert("types", String::from("private_channel,public_channel"));
@@ -88,29 +86,22 @@ impl SlackClientTrait for SlackClient {
         Ok(channels)
     }
 
-    async fn post_message(&self, channel_id: &str, message: &str) -> Result<(), Box<dyn Error>> {
+    async fn post_message(&self, channel_id: &str, message: &str) -> Result<()> {
         let mut params = HashMap::new();
         params.insert("token", self.token.clone());
         params.insert("channel", channel_id.to_string());
         params.insert("text", message.to_string());
 
-        let result = self
-            .client
+        // let result = self
+        self.client
             .post("https://slack.com/api/chat.postMessage")
             .form(&params)
             .send()
-            .await;
+            .await?
+            .error_for_status()?;
 
-        match result {
-            Ok(resp) => {
-                if resp.status().is_success() {
-                    Ok(())
-                } else {
-                    Err(Box::new(resp.error_for_status().unwrap_err()) as Box<dyn StdError>)
-                }
-            }
-            Err(e) => Err(Box::new(e) as Box<dyn StdError>),
-        }
+        Ok(())
+
     }
 }
 

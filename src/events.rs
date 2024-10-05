@@ -1,11 +1,10 @@
 use crate::client::{SlackClient, SlackClientTrait};
-use crate::last_day::{get_last_workday, is_last_workday};
+use crate::config::Configuration;
+use crate::last_day::get_last_workday;
 use chrono::Utc;
 use serde::Deserialize;
 use std::sync::atomic::{AtomicPtr, Ordering};
-use crate::config::Configuration;
 
-use rocket::{config, Config};
 
 #[derive(Deserialize)]
 #[serde(tag = "type")]
