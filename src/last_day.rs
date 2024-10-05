@@ -1,8 +1,8 @@
-use std::error::Error;
 
 use chrono::{Datelike, NaiveDate};
 use reqwest::Client;
 use serde::Deserialize;
+use anyhow::Result;
 
 #[derive(Deserialize)]
 struct SholidayFaboulResponse {
@@ -24,11 +24,11 @@ struct SholidayFaboulDay {
 }
 
 
-pub async fn is_last_workday(date: &NaiveDate) -> Result<bool, Box<dyn Error>> {
+pub async fn is_last_workday(date: &NaiveDate) -> Result<bool> {
     Ok(get_last_workday(date).await? == *date)
 }
 
-pub async fn get_last_workday(date: &NaiveDate) -> Result<NaiveDate, Box<dyn Error>> {
+pub async fn get_last_workday(date: &NaiveDate) -> Result<NaiveDate> {
     let client = Client::new();
     let url = format!(
         "https://sholiday.faboul.se/dagar/v2.1/{}/{}",
