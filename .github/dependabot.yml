@@ -10,15 +10,36 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    reviewers:
+      - "kazie"
+    groups:
+      non-major-updates:
+        patterns:
+          - "minor"
+          - "patch"
 
   # Maintain dependencies in dockerfiles
   - package-ecosystem: "docker"
     directory: "/"
     schedule:
       interval: "daily"
+    reviewers:
+      - "kazie"
+    groups:
+      non-major-updates:
+        patterns:
+          - "minor"
+          - "patch"
 
   # Maintain dependencies in cargo and cargo-lock
   - package-ecosystem: "cargo"
     directory: "/"
     schedule:
       interval: "daily"
+    reviewers:
+      - "kazie"
+    groups:
+      non-major-updates:
+        patterns:
+          - "minor"
+          - "patch"
