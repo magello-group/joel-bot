@@ -13,8 +13,10 @@ updates:
     reviewers:
       - "kazie"
     groups:
-      non-major-updates:
+      minor-and-patch:
         patterns:
+          - "*"
+        update-types:
           - "minor"
           - "patch"
 
@@ -26,8 +28,10 @@ updates:
     reviewers:
       - "kazie"
     groups:
-      non-major-updates:
+      minor-and-patch:
         patterns:
+          - "*"
+        update-types:
           - "minor"
           - "patch"
 
@@ -39,7 +43,9 @@ updates:
     reviewers:
       - "kazie"
     groups:
-      non-major-updates:
+      minor-and-patch:
         patterns:
+          - "*"
+        update-types:
           - "minor"
           - "patch"
