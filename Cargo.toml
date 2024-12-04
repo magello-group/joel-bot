@@ -18,7 +18,7 @@ path = "src/lib.rs"
 
 [dependencies]
 reqwest = { version = "0.12.9", features = ["blocking", "json"] }
-tokio = "1.41.1"
+tokio = "1.42.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.9.27"
 serde_json = "1.0"
@@ -27,4 +27,4 @@ chrono = "0.4.31"
 clokwerk = "0.4.0"
 rand = { version = "0.8.5", features = ["small_rng"] }
 async-trait = "0.1.83"
-anyhow = "1.0.93"
+anyhow = "1.0.94"
