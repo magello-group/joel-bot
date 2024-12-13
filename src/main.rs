@@ -6,6 +6,7 @@ use rand::SeedableRng;
 use std::time::Duration;
 
 use chrono::{Datelike, NaiveTime, Utc};
+use chrono_tz::Europe::Stockholm;
 use clokwerk::Interval::Weekday;
 use clokwerk::{AsyncScheduler, Job};
 
@@ -181,4 +182,15 @@ async fn sleep_and_send_time_report_response(
             println!("got exception while sending message: {}", err)
         }
     }
+}
+
+#[post(
+    "/gg",
+    format = "application/x-www-form-urlencoded"
+)]
+async fn gg() -> Accepted<String> {
+    let date = Utc::now();
+    let swedish_time = date.with_timezone(&Stockholm);
+
+    Accepted(format!("Klockan är {}, dags att klocka ut!", swedish_time.format("%H:%M")))
 }
