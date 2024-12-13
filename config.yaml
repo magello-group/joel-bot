@@ -28,12 +28,14 @@ time_report:
       - "`System.out.println(\"Hej\");`... Trodde ni va? Jag är ju skriven i det alltför maxade språket Rust, så snarare `println!(\"{}\", \"Hej\");`"
       - "Sex laxar i en laxask. Se... det var inte så svårt."
       - "Hejsan hoppsan kära kollegor, jag är här åter igen och söker efter er uppmärksamhet."
+      - "Om du ignorerar det här meddelandet blir det som att låta 'null pointer exception' köra sitt race i produktion :this-is-fine-fire:"
     1:
       - "Ring in det nya och ring ut det gamla i årets första, skälvande månad."
     3:
       - "A men tjenare! Denna månad har jag ett meddelande från självaste påskharen:"
     12:
       - "Nu tindrar stjärnor i det blå, i hus och fönster likaså, och alla röda tomtar gå, med vita skägg och luvor på."
+      - "God Jul! Må din gran vara rakare än mina nyårslöften!"
 
   middle:
     general:
@@ -42,6 +44,10 @@ time_report:
       - "Nu är det sista dagen att tidrapportera för denna månad."
       - "Ännu en månad börjar röra sig mot sitt slut, och i och med det är det dags att tidrapportera."
       - "Tiden är kommen att tidsrapportera tiden i tidsrapporteringsrapporten. Tid i tid tid, tid tid tid rapport rapport."
+      - "Idag är inte vilken dag som helst utan idag är dagen vi firar tidrapporteringens dag."
+      - "Precis som en bra exception-handler räddar systemet från att krascha, räddar tidrapporteringen ditt projekt från att spåra ur!"
+      - "Tidrapportera eller få en infinite loop med frågor från chefen. :hourglass_flowing_sand::leftwards_arrow_with_hook:"
+      - "404 timmar hittade! Lägg in dom innan PM:en går full BSOD. :cyclone:"
     1:
       - "En sak som dock inte är nytt, är att det är slutet på månaden och det är dags att tidrapportera."
     3:
@@ -56,7 +62,13 @@ time_report:
       - "Over and out!"
       - "process::exit(1);"
       - "Mic-drop 🖐️🎤"
+      - "Catcha later, hoppas min kod inte får en runtime error!"
+      - "Vi ses snart! Och om inte, kanske vi ses i ett pull request! 🕵️‍♂️✨"
+      - "Time to debug my sleep. Vi ses i loggen! 😴💻"
+      - "Hejdå! Hoppas ni har en exception-free kväll! 🌙✨"
     3:
       - "Ho ho ho... nej det är ju tomten som säger. Har har hare 🐇🥚 :joel:"
     12:
       - "Gott Nytt År! Önskar joel-bot 🎆"
+      - "Kom ihåg att hålla din julkod fri från panics, och låt värmen från mitt Rust-programmerande skal sprida jul och nyårkänsla till er alla!"
+      - "Från oss alla, till er alla, en riktigt god tidsrapportering!"
