@@ -186,9 +186,11 @@ async fn sleep_and_send_time_report_response(
 
 #[post(
     "/gg",
-    format = "application/x-www-form-urlencoded"
+    format = "application/x-www-form-urlencoded",
+    data = "<request>"
 )]
-async fn gg() -> Accepted<String> {
+async fn gg(request: Form<SlackSlashMessage>) -> Accepted<String> {
+    println!("{}", request.response_url);
     let date = Utc::now();
     let swedish_time = date.with_timezone(&Stockholm);
 
