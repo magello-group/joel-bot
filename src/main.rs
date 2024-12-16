@@ -52,7 +52,7 @@ async fn main() {
     // Start web server
     rocket::build()
         .manage(slack_events)
-        .mount("/", routes![slack_request, time_report])
+        .mount("/", routes![slack_request, time_report, gg])
         .launch()
         .await
         .expect("Server failed to start");
@@ -190,9 +190,59 @@ async fn sleep_and_send_time_report_response(
     data = "<request>"
 )]
 async fn gg(request: Form<SlackSlashMessage>) -> Accepted<String> {
-    println!("{}", request.response_url);
-    let date = Utc::now();
-    let swedish_time = date.with_timezone(&Stockholm);
+    let upper = NaiveTime::from_hms_opt(17, 0, 0).unwrap();
+    let lower = NaiveTime::from_hms_opt(8, 0, 0).unwrap();
 
-    Accepted(format!("Klockan är {}, dags att klocka ut!", swedish_time.format("%H:%M")))
+    let date = Utc::now();
+    let time = date.with_timezone(&Stockholm).time();
+
+    let message = if time < upper && time >= lower {
+        let delta = upper - time;
+        let string = generate_formatted_duration(&delta);
+        format!("Nu är det bara {} innan du kan packa ihop för dagen, tänk vad kul du kan ha i {} till! :smiley:", string, string)
+    } else if time < lower {
+        let delta = lower - time;
+        let string = generate_formatted_duration(&delta);
+        format!("Var lugn! Du behöver inte börja jobba förrän om {}", string)
+    } else {
+        format!("Klockan är efter {}, stay calm och sluta jobba!", upper.format("%H:%M"))
+    };
+
+    Accepted(message)
+}
+
+fn generate_formatted_duration(duration: &chrono::Duration) -> String {
+    let mut formatted = String::new();
+    let seconds = duration.num_seconds() % 60;
+    let minutes = duration.num_minutes() % 60;
+    let hours = duration.num_hours();
+
+    let append = |s1: &str, s2: &str| -> String {
+        return if s1.len() > 0 {
+            format!("{} och {}", s1, s2)
+        } else {
+            String::from(s2)
+        }
+    };
+
+    match minutes {
+        1 => formatted = append(&formatted, format!("{} minut", minutes).as_str()),
+        minutes if minutes > 1 => formatted = append(&formatted, format!("{} minuter", minutes).as_str()),
+        _ => {}
+    };
+
+    match hours {
+        1 => formatted = append(&format!("{} timme", hours), formatted.as_str()),
+        hours if hours > 1 => formatted = append(&format!("{} timmar", hours), formatted.as_str()),
+        _ => {
+            // Add seconds only when hours are < 1
+            match seconds {
+                1 => formatted = append(&formatted, format!("{} sekund", seconds).as_str()),
+                seconds if seconds > 1 => formatted = append(&formatted, format!("{} sekunder", seconds).as_str()),
+                _ => {}
+            };
+        }
+    };
+
+    formatted
 }
