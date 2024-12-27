@@ -17,7 +17,7 @@ path = "src/lib.rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-reqwest = { version = "0.12.9", features = ["blocking", "json"] }
+reqwest = { version = "0.12.10", features = ["blocking", "json"] }
 tokio = "1.42.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.9.27"
@@ -28,4 +28,4 @@ chrono-tz = "0.10.0"
 clokwerk = "0.4.0"
 rand = { version = "0.8.5", features = ["small_rng"] }
 async-trait = "0.1.83"
-anyhow = "1.0.94"
+anyhow = "1.0.95"
