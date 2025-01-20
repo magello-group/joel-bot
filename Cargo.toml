@@ -18,14 +18,14 @@ path = "src/lib.rs"
 
 [dependencies]
 reqwest = { version = "0.12.12", features = ["blocking", "json"] }
-tokio = "1.42.0"
+tokio = "1.43.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.9.27"
 serde_json = "1.0"
 rocket = { version = "0.5.1", features = ["json"] }
 chrono = "0.4.39"
-chrono-tz = "0.10.0"
+chrono-tz = "0.10.1"
 clokwerk = "0.4.0"
 rand = { version = "0.8.5", features = ["small_rng"] }
-async-trait = "0.1.84"
+async-trait = "0.1.85"
 anyhow = "1.0.95"
