@@ -26,6 +26,6 @@ rocket = { version = "0.5.1", features = ["json"] }
 chrono = "0.4.39"
 chrono-tz = "0.10.1"
 clokwerk = "0.4.0"
-rand = { version = "0.8.5", features = ["small_rng"] }
+rand = { version = "0.9.0", features = ["small_rng"] }
 async-trait = "0.1.85"
 anyhow = "1.0.95"
