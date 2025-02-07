@@ -120,7 +120,7 @@ async fn time_report(request: Form<SlackSlashMessage>) -> Accepted<String> {
         let today = Utc::now().naive_utc().date();
         let http_client = Client::new();
         let mut map = HashMap::new();
-        let mut rng = SmallRng::from_entropy();
+        let mut rng = SmallRng::from_os_rng();
 
         match get_last_workday(&today).await {
             Ok(last_workday) => {
@@ -130,7 +130,7 @@ async fn time_report(request: Form<SlackSlashMessage>) -> Accepted<String> {
                     sleep_and_send_time_report_response(&http_client, &response_url, &map).await;
 
                     for _ in 0..2 {
-                        let pos = rng.gen_range(0..calculations.len());
+                        let pos = rng.random_range(0..calculations.len());
 
                         map.insert("text", format!("... {}", calculations[pos]));
 
