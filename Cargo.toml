@@ -24,7 +24,7 @@ serde_yaml = "0.9.27"
 serde_json = "1.0"
 rocket = { version = "0.5.1", features = ["json"] }
 chrono = "0.4.41"
-chrono-tz = "0.10.3"
+chrono-tz = "0.10.4"
 clokwerk = "0.4.0"
 rand = { version = "0.9.1", features = ["small_rng"] }
 async-trait = "0.1.88"
