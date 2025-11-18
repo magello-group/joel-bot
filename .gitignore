@@ -1,2 +1,30 @@
+# Rust build output
+/target/
+
+# If you are building a library, you may want to ignore Cargo.lock
+# Uncomment the next line if this is a library
+# Cargo.lock
+
+# Environment files
+.env
+
+# VS Code settings
+.vscode/
+
+# By-products of cargo
+**/*.rs.bk
+
+# IDE files
+.idea/
+*.swp
+*.swo
+
+# MacOS
+.DS_Store
+
+# Other common files
+*.log
+
+# Existing patterns
 .idea/
 /target

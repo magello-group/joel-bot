@@ -1,0 +1,27 @@
+{
+  "name": "Rust DevContainer",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "workspaceFolder": "/workspaces/joel-bot",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.shell.linux": "/bin/bash"
+      },
+      "extensions": [
+        "rust-lang.rust-analyzer",
+        "vadimcn.vscode-lldb",
+        "ms-vscode.cpptools",
+        "fill-labs.dependi",
+        "tamasfe.even-better-toml",
+        "editorconfig.editorconfig"
+      ]
+    }
+  },
+  "forwardPorts": [
+    8000,
+    8080
+  ],
+  "postCreateCommand": "cargo fetch"
+}

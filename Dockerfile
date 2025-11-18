@@ -36,8 +36,13 @@ RUN apt update && \
     apt install -y libssl-dev ca-certificates pkg-config && \
     rm -rf /var/lib/apt/lists/*
 
-# Set the Rocket environment to production
+
+# Set the Rocket environment to production and port to 8080
 ENV ROCKET_ENV=production
+ENV ROCKET_PORT=8080
+
+# Expose port 8080
+EXPOSE 8080
 
 # Set the start command for the container
 CMD ["/joel-bot"]
