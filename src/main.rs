@@ -1,6 +1,9 @@
 #[macro_use]
 extern crate rocket;
 use crate::last_day::{get_last_workday, is_last_workday};
+
+// Add dotenv support
+use dotenv::dotenv;
 use rand::SeedableRng;
 
 use std::time::Duration;
@@ -29,6 +32,9 @@ mod last_day;
 
 #[rocket::main]
 async fn main() {
+    // Load environment variables from .env
+    dotenv().ok();
+
     let config = Arc::new(Configuration::read().expect("couldn't read configuration file"));
     let client = Arc::new(SlackClient::new().expect("couldn't initiate slack client"));
 
