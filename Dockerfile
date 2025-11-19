@@ -1,5 +1,5 @@
 # Stage 1: Build the Rust project
-FROM rust:slim-bookworm as builder
+FROM rust:slim-bookworm AS builder
 
 # Set the default toolchain to stable
 RUN rustup default stable
@@ -44,5 +44,5 @@ ENV ROCKET_PORT=8080
 # Expose port 8080
 EXPOSE 8080
 
-# Set the start command for the container
-CMD ["/joel-bot"]
+# Set entrypoint so arguments are forwarded to the binary
+ENTRYPOINT ["/joel-bot"]

@@ -10,8 +10,6 @@ use std::time::Duration;
 
 use chrono::{Datelike, NaiveTime, Utc};
 use chrono_tz::Europe::Stockholm;
-use clokwerk::Interval::Weekday;
-use clokwerk::{AsyncScheduler, Job};
 
 use crate::config::*;
 use rand::rngs::SmallRng;
@@ -35,33 +33,34 @@ async fn main() {
     // Load environment variables from .env
     dotenv().ok();
 
+    let args: Vec<String> = std::env::args().collect();
     let config = Arc::new(Configuration::read().expect("couldn't read configuration file"));
     let client = Arc::new(SlackClient::new().expect("couldn't initiate slack client"));
 
-    // Run scheduler
-    let mut scheduler = AsyncScheduler::with_tz(Utc);
-    scheduler
-        .every(Weekday)
-        .at_time(NaiveTime::from_hms_opt(9, 0, 0).unwrap())
-        .run(move || last_workday_message(config.clone(), client.clone()));
+    
+    if args.contains(&"--operation=api".to_string())
+    {
+            let slack_events = SlackState::new();
+            rocket::build()
+                .manage(slack_events)
+                .mount("/", routes![slack_request, time_report, gg])
+                .launch()
+                .await
+                .expect("Server failed to start");
+            return;
+    }
 
-    tokio::spawn(async move {
-        loop {
-            scheduler.run_pending().await;
-            sleep(Duration::from_secs(60)).await;
-        }
-    });
+    if args.contains(&"--operation=check_last_workday".to_string())
+    {
+            last_workday_message(config.clone(), client.clone()).await;
+            return;
+    }
 
-    // Setup slack_events handler
-    let slack_events = SlackState::new();
-
-    // Start web server
-    rocket::build()
-        .manage(slack_events)
-        .mount("/", routes![slack_request, time_report, gg])
-        .launch()
-        .await
-        .expect("Server failed to start");
+    eprintln!("Please specify an --operation: api or check_last_workday");
+    println!("Usage: joel-bot --operation=<operation>");
+    println!("Operations:");
+    println!("  api                   Start the Slack API server");
+    println!("  check_last_workday    Check if today is the last workday of the month and send a message to Slack if so");
 }
 
 async fn last_workday_message(config: Arc<Configuration>, client: Arc<SlackClient>) {
@@ -196,6 +195,8 @@ async fn sleep_and_send_time_report_response(
     data = "<request>"
 )]
 async fn gg(request: Form<SlackSlashMessage>) -> Accepted<String> {
+    // 'request' is unused, so prefix with underscore to silence warning
+    let _request = request;
     let upper = NaiveTime::from_hms_opt(17, 0, 0).unwrap();
     let lower = NaiveTime::from_hms_opt(8, 0, 0).unwrap();
 

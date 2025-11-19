@@ -2,21 +2,19 @@ name: Rust CI
 
 on:
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v5
-    - uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-    - name: rust-cargo
-      run: cargo test
-
+      - uses: actions/checkout@v5
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - name: rust-cargo
+        run: cargo test
