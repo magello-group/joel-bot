@@ -94,6 +94,7 @@ module ca 'br:crmagello.azurecr.io/bicep/container-app:latest' = {
     ingress: {
       external: true
       targetPort: 8080
+      customDomain: environment == 'prod' ? 'joel-bot.magello.se' : 'joel-bot-${environment}.magello.se'
     }
     secrets: [
       {
