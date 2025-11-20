@@ -77,6 +77,9 @@ module ca 'br:crmagello.azurecr.io/bicep/container-app:latest' = {
       image: 'crmagello.azurecr.io/joel-bot:${imageVersion}'
       cpu: '0.25'
       memory: '0.5Gi'
+      scaling: {
+        minReplicas: 1
+      }
       environment: [
         {
           name: 'APP_ENVIRONMENT'
@@ -84,7 +87,7 @@ module ca 'br:crmagello.azurecr.io/bicep/container-app:latest' = {
         }
         {
           name: 'JOEL_BOT_SLACK_TOKEN'
-          secretRef: 'joelbotslacktoken' 
+          secretRef: 'joelbotslacktoken'
         }
       ]
       args: [
@@ -124,7 +127,7 @@ module caj 'br:crmagello.azurecr.io/bicep/container-job:latest' = {
         }
         {
           name: 'JOEL_BOT_SLACK_TOKEN'
-          secretRef: 'joelbotslacktoken' 
+          secretRef: 'joelbotslacktoken'
         }
       ]
       args: [
