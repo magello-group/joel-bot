@@ -5,7 +5,6 @@ use chrono::Utc;
 use serde::Deserialize;
 use std::sync::atomic::{AtomicPtr, Ordering};
 
-
 #[derive(Deserialize)]
 #[serde(tag = "type")]
 pub enum SlackRequest {
@@ -50,8 +49,7 @@ pub struct SlackState {
 }
 
 impl SlackState {
-    pub fn new() -> Self
-    {
+    pub fn new() -> Self {
         SlackState {
             slack_client: SlackClient::new().unwrap(),
             token: AtomicPtr::new(Box::into_raw(Box::new(String::new()))), // Fixing memory management
@@ -121,10 +119,10 @@ impl SlackState {
             config.get_introduction()
         };
         client
-            .post_message(&event.channel, &message).await
+            .post_message(&event.channel, &message)
+            .await
             .unwrap_or_else(|error| println!("{}", error));
 
         String::new()
     }
-
 }

@@ -37,23 +37,20 @@ async fn main() {
     let config = Arc::new(Configuration::read().expect("couldn't read configuration file"));
     let client = Arc::new(SlackClient::new().expect("couldn't initiate slack client"));
 
-    
-    if args.contains(&"--operation=api".to_string())
-    {
-            let slack_events = SlackState::new();
-            rocket::build()
-                .manage(slack_events)
-                .mount("/", routes![slack_request, time_report, gg])
-                .launch()
-                .await
-                .expect("Server failed to start");
-            return;
+    if args.contains(&"--operation=api".to_string()) {
+        let slack_events = SlackState::new();
+        rocket::build()
+            .manage(slack_events)
+            .mount("/", routes![slack_request, time_report, gg])
+            .launch()
+            .await
+            .expect("Server failed to start");
+        return;
     }
 
-    if args.contains(&"--operation=check_last_workday".to_string())
-    {
-            last_workday_message(config.clone(), client.clone()).await;
-            return;
+    if args.contains(&"--operation=check_last_workday".to_string()) {
+        last_workday_message(config.clone(), client.clone()).await;
+        return;
     }
 
     eprintln!("Please specify an --operation: api or check_last_workday");
@@ -139,7 +136,8 @@ async fn time_report(request: Form<SlackSlashMessage>) -> Accepted<String> {
 
                         map.insert("text", format!("... {}", calculations[pos]));
 
-                        sleep_and_send_time_report_response(&http_client, &response_url, &map).await;
+                        sleep_and_send_time_report_response(&http_client, &response_url, &map)
+                            .await;
                     }
 
                     map.insert("text", String::from("... det är ju idag!"));
@@ -212,7 +210,10 @@ async fn gg(request: Form<SlackSlashMessage>) -> Accepted<String> {
         let string = generate_formatted_duration(&delta);
         format!("Var lugn! Du behöver inte börja jobba förrän om {}", string)
     } else {
-        format!("Klockan är efter {}, stay calm och sluta jobba!", upper.format("%H:%M"))
+        format!(
+            "Klockan är efter {}, stay calm och sluta jobba!",
+            upper.format("%H:%M")
+        )
     };
 
     Accepted(message)
@@ -229,12 +230,14 @@ fn generate_formatted_duration(duration: &chrono::Duration) -> String {
             format!("{} och {}", s1, s2)
         } else {
             String::from(s2)
-        }
+        };
     };
 
     match minutes {
         1 => formatted = append(&formatted, format!("{} minut", minutes).as_str()),
-        minutes if minutes > 1 => formatted = append(&formatted, format!("{} minuter", minutes).as_str()),
+        minutes if minutes > 1 => {
+            formatted = append(&formatted, format!("{} minuter", minutes).as_str())
+        }
         _ => {}
     };
 
@@ -245,7 +248,9 @@ fn generate_formatted_duration(duration: &chrono::Duration) -> String {
             // Add seconds only when hours are < 1
             match seconds {
                 1 => formatted = append(&formatted, format!("{} sekund", seconds).as_str()),
-                seconds if seconds > 1 => formatted = append(&formatted, format!("{} sekunder", seconds).as_str()),
+                seconds if seconds > 1 => {
+                    formatted = append(&formatted, format!("{} sekunder", seconds).as_str())
+                }
                 _ => {}
             };
         }
