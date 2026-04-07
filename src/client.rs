@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
-use reqwest::{Client};
-use serde::Deserialize;
 use anyhow::Result;
+use reqwest::Client;
+use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]
 pub struct Channel {
@@ -101,7 +101,5 @@ impl SlackClientTrait for SlackClient {
             .error_for_status()?;
 
         Ok(())
-
     }
 }
-

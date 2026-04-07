@@ -1,8 +1,7 @@
-
+use anyhow::Result;
 use chrono::{Datelike, NaiveDate};
 use reqwest::Client;
 use serde::Deserialize;
-use anyhow::Result;
 
 #[derive(Deserialize)]
 struct SholidayFaboulResponse {
@@ -22,7 +21,6 @@ struct SholidayFaboulDay {
     #[serde(alias = "arbetsfri dag")]
     work_free_day: String,
 }
-
 
 pub async fn is_last_workday(date: &NaiveDate) -> Result<bool> {
     Ok(get_last_workday(date).await? == *date)
@@ -55,7 +53,7 @@ mod test {
     use chrono::{NaiveDate, TimeZone, Utc};
     use tokio;
 
-    use super::{is_last_workday, get_last_workday};
+    use super::{get_last_workday, is_last_workday};
 
     #[tokio::test]
     async fn is_2020_10_31_last_work_day() {
@@ -87,7 +85,10 @@ mod test {
         let last_workday = get_last_workday(&date).await.expect("failed");
 
         // 2020-10-30 was a Friday, and therefore the last workday of October 2020
-        let expected_last_workday = Utc.with_ymd_and_hms(2020, 10, 30, 0, 0, 0).unwrap().date_naive();
+        let expected_last_workday = Utc
+            .with_ymd_and_hms(2020, 10, 30, 0, 0, 0)
+            .unwrap()
+            .date_naive();
         assert_eq!(last_workday, expected_last_workday);
     }
 }
