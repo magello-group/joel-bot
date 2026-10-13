@@ -9,7 +9,7 @@ authors = [
     "Eric von Knorring <eric.von.knorring@magello.se>",
 ]
 edition = "2024"
-rust-version = "1.88"
+rust-version = "1.99"
 
 [lib]
 name = "slack"

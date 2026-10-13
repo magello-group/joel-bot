@@ -4,6 +4,9 @@ Här ska vi skriva funktionalitet så småningom, men det är dag tre kl 17:43 s
 
 ## Building
 
+The project uses the latest stable Rust (see `rust-toolchain.toml`); run
+`rustup update` if the build says your toolchain is too old.
+
 Simply build with cargo:
 
 ```console

@@ -1,0 +1,4 @@
+# Always build with the latest stable Rust; `rustup update` keeps it current.
+[toolchain]
+channel = "stable"
+components = ["clippy", "rustfmt"]

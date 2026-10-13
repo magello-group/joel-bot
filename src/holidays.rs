@@ -124,7 +124,7 @@ mod test {
 
     /// Validates the local calendar against the live holiday API, day by day.
     #[tokio::test]
-    #[ignore = "calls the live holiday API, run with --ignored"]
+    #[ignore = "calls the live holiday API, run with `cargo test -- --ignored`"]
     async fn live_validation() {
         use crate::last_day::{SholidayFaboulDay, fetch_days, last_workday_in};
         use serde::Deserialize;
