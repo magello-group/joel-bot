@@ -13,6 +13,9 @@ pub enum SlackRequest {
     Challenge(ChallengeRequest),
     #[serde(rename = "event_callback")]
     Event(EventRequest),
+    /// Other request types, e.g. `app_rate_limited`, acknowledged so Slack doesn't retry them.
+    #[serde(other)]
+    Unknown,
 }
 
 #[derive(Deserialize)]
@@ -28,7 +31,8 @@ pub struct EventRequest {
 
 #[derive(Deserialize, Debug)]
 pub struct AppMentionEvent {
-    pub user: String,
+    /// Missing when the mention was written by a bot or workflow.
+    pub user: Option<String>,
     pub text: String,
     pub channel: String,
 }
@@ -38,6 +42,9 @@ pub struct AppMentionEvent {
 pub enum Event {
     #[serde(rename = "app_mention")]
     AppMentionEvent(AppMentionEvent),
+    /// Event types we don't handle, acknowledged so Slack doesn't retry them.
+    #[serde(other)]
+    Unknown,
 }
 
 pub struct SlackState {
@@ -61,9 +68,11 @@ impl SlackState {
             SlackRequest::Event(request) => {
                 match request.event {
                     Event::AppMentionEvent(event) => self.handle_mention_event(event),
+                    Event::Unknown => {}
                 }
                 String::new()
             }
+            SlackRequest::Unknown => String::new(),
         }
     }
 
@@ -93,12 +102,21 @@ pub fn time_report_message(last_workday: &NaiveDate) -> String {
 pub const IT_IS_TODAY: &str = "... det är ju idag!";
 
 async fn mention_response(config: &Configuration, event: &AppMentionEvent) -> String {
-    // The first word is the mention of the bot itself
-    let words: Vec<&str> = event.text.split_whitespace().skip(1).collect();
+    // The command follows the first mention, which can be anywhere in the
+    // text. Mentions are skipped, of the bot itself or anyone else.
+    let is_mention = |word: &&str| word.starts_with("<@");
+    let words: Vec<&str> = event
+        .text
+        .split_whitespace()
+        .skip_while(|word| !is_mention(word))
+        .filter(|word| !is_mention(word))
+        .collect();
 
-    match words.first() {
+    let command = words.first().map(|word| word.to_lowercase());
+
+    match command.as_deref() {
         None => config.get_introduction(),
-        Some(&"tid") => {
+        Some("tid") => {
             let today = today();
             match next_time_report_day(&today).await {
                 // Unlike /time-report, which sends the "calculations" as separate
@@ -117,16 +135,79 @@ async fn mention_response(config: &Configuration, event: &AppMentionEvent) -> St
                 }
             }
         }
-        Some(&"pricing") => String::from(
+        Some("pricing") => String::from(
             "För den nätta kostnaden av 114,805 kr per månad eller 15,8 öre per timme kan du hosta din egen joel-bot! :joel:",
         ),
-        Some(&"skribenter") => config.get_authors(),
+        Some("skribenter") => config.get_authors(),
         Some(_) => {
-            let user = &event.user;
+            let user = event
+                .user
+                .as_ref()
+                .map(|user| format!(" <@{user}>"))
+                .unwrap_or_default();
             let question = words.join(" ");
-            format!(
-                "Är du skön eller <@{user}>? Tror du att _jag_ vet något om *{question}*? :joel:"
-            )
+            format!("Är du skön eller{user}? Tror du att _jag_ vet något om *{question}*? :joel:")
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    fn mention(text: &str, user: Option<&str>) -> AppMentionEvent {
+        AppMentionEvent {
+            user: user.map(String::from),
+            text: String::from(text),
+            channel: String::from("C1"),
+        }
+    }
+
+    #[test]
+    fn parses_mention_from_bot_without_user() {
+        let request: SlackRequest = serde_json::from_str(
+            r#"{"type":"event_callback","event":{"type":"app_mention","bot_id":"B1","text":"<@U0> tid","channel":"C1"}}"#,
+        )
+        .unwrap();
+        assert!(matches!(
+            request,
+            SlackRequest::Event(EventRequest {
+                event: Event::AppMentionEvent(AppMentionEvent { user: None, .. })
+            })
+        ));
+    }
+
+    #[test]
+    fn parses_unknown_request_and_event_types() {
+        let request: SlackRequest =
+            serde_json::from_str(r#"{"type":"app_rate_limited","minute_rate_limited":1}"#).unwrap();
+        assert!(matches!(request, SlackRequest::Unknown));
+        let request: SlackRequest = serde_json::from_str(
+            r#"{"type":"event_callback","event":{"type":"reaction_added","user":"U1"}}"#,
+        )
+        .unwrap();
+        assert!(matches!(
+            request,
+            SlackRequest::Event(EventRequest {
+                event: Event::Unknown
+            })
+        ));
+    }
+
+    #[tokio::test]
+    async fn mention_can_be_anywhere_and_any_case() {
+        let config = Configuration::read().unwrap();
+        let pricing = mention_response(&config, &mention("<@U0> pricing", Some("U1"))).await;
+        assert!(pricing.contains("114,805 kr"), "{pricing}");
+        let answer = mention_response(&config, &mention("hej <@U0> PRICING", Some("U1"))).await;
+        assert_eq!(answer, pricing);
+    }
+
+    #[tokio::test]
+    async fn unknown_command_without_user() {
+        let config = Configuration::read().unwrap();
+        let answer = mention_response(&config, &mention("<@U0> hej", None)).await;
+        assert!(answer.starts_with("Är du skön eller? "), "{answer}");
+        assert!(answer.contains("*hej*"), "{answer}");
     }
 }

@@ -16,6 +16,7 @@ use serde::Serialize;
 use slack::client::SlackClient;
 use slack::config::Configuration;
 use slack::events::{IT_IS_TODAY, SlackRequest, SlackState, time_report_message};
+use slack::holidays::is_work_free;
 use slack::last_day::{is_last_workday, next_time_report_day, now, today};
 use tokio::time::sleep;
 
@@ -42,8 +43,14 @@ async fn main() -> ExitCode {
         return ExitCode::FAILURE;
     }
 
-    let config = Arc::new(Configuration::read().expect("couldn't read configuration file"));
-    let client = Arc::new(SlackClient::new().expect("couldn't initiate slack client"));
+    let setup = || anyhow::Ok((Configuration::read()?, SlackClient::new()?));
+    let (config, client) = match setup() {
+        Ok((config, client)) => (Arc::new(config), Arc::new(client)),
+        Err(error) => {
+            eprintln!("couldn't start: {error:#}");
+            return ExitCode::FAILURE;
+        }
+    };
 
     if run_api {
         rocket::build()
@@ -135,8 +142,7 @@ fn time_report(
             Ok(last_workday) if last_workday == today => {
                 let mut rng = rand::rng();
                 let mut messages = vec![time_report_message(&last_workday)];
-                for _ in 0..2 {
-                    let calculation = CALCULATIONS.choose(&mut rng).unwrap();
+                for calculation in CALCULATIONS.sample(&mut rng, 2) {
                     messages.push(format!("... {calculation}"));
                 }
                 messages.push(String::from(IT_IS_TODAY));
@@ -188,9 +194,12 @@ fn gg(_request: Form<SlackSlashMessage>) -> Accepted<String> {
     let workday_start = NaiveTime::from_hms_opt(8, 0, 0).unwrap();
     let workday_end = NaiveTime::from_hms_opt(17, 0, 0).unwrap();
 
-    let current_time = now().time();
+    let now = now();
+    let current_time = now.time();
 
-    let message = if current_time < workday_start {
+    let message = if is_work_free(now.date_naive()) {
+        String::from("Det är ju ledigt idag! Stäng datorn och gå ut i solen :sunny:")
+    } else if current_time < workday_start {
         let time_until_start = generate_formatted_duration(&(workday_start - current_time));
         format!("Var lugn! Du behöver inte börja jobba förrän om {time_until_start}")
     } else if current_time < workday_end {

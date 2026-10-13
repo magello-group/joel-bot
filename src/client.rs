@@ -42,7 +42,8 @@ pub struct SlackClient {
 
 impl SlackClient {
     pub fn new() -> Result<SlackClient> {
-        let token = std::env::var("JOEL_BOT_SLACK_TOKEN")?;
+        let token =
+            std::env::var("JOEL_BOT_SLACK_TOKEN").context("JOEL_BOT_SLACK_TOKEN is not set")?;
         Ok(SlackClient { token })
     }
 

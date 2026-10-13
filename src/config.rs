@@ -110,3 +110,39 @@ fn bullet_list(items: &[String]) -> String {
         .collect::<Vec<_>>()
         .join("\n")
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn config_yaml_is_valid() {
+        Configuration::read().unwrap();
+    }
+
+    #[test]
+    fn month_keys_select_month_messages() {
+        let config = Configuration::read().unwrap();
+        let december = &config.time_report.beginning["12"];
+        let message = Configuration::get_message_part(&config.time_report.beginning, "12");
+        assert!(december.contains(&message), "{message}");
+    }
+
+    #[test]
+    fn empty_general_messages_are_rejected() {
+        let yaml = r#"
+intro:
+  greetings: ["Hej"]
+  about_me: ""
+  features: []
+  credits: { intro: "", names: [] }
+time_report:
+  beginning: { general: ["a"] }
+  middle: { general: [] }
+  end: { general: ["c"] }
+"#;
+        let config: Configuration = serde_norway::from_str(yaml).unwrap();
+        let error = config.validate().unwrap_err().to_string();
+        assert!(error.contains("time_report.middle.general"), "{error}");
+    }
+}
