@@ -13,8 +13,24 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
-      - name: rust-cargo
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@v2
+      - name: Check formatting
+        run: cargo fmt --check
+      - name: Clippy
+        run: cargo clippy --all-targets -- -D warnings
+      - name: Test
         run: cargo test
+      # Tests against the live holiday API (sholiday.faboul.se). They are
+      # allowed to fail so an API outage doesn't block PRs, but they show up as
+      # a warning. The weekly holiday_validation workflow fails hard instead.
+      - name: Live API tests
+        continue-on-error: true
+        timeout-minutes: 5
+        run: |
+          cargo test -- --ignored || {
+            echo "::warning title=Live holiday API tests failed::The API may be down, or the local holiday calendar differs from it. See the step log."
+            exit 1
+          }

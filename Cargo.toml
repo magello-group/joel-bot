@@ -8,7 +8,8 @@ authors = [
     "Petter Salminen <petter.salminen@magello.se>",
     "Eric von Knorring <eric.von.knorring@magello.se>",
 ]
-edition = "2021"
+edition = "2024"
+rust-version = "1.88"
 
 [lib]
 name = "slack"
@@ -17,16 +18,38 @@ path = "src/lib.rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-reqwest = { version = "0.13.4", features = ["blocking", "json", "form"] }
-tokio = "1.52.3"
-serde = { version = "1.0", features = ["derive"] }
-serde_yaml = "0.9.27"
-serde_json = "1.0"
+reqwest = { version = "0.13.5", features = ["json", "form"] }
+tokio = { version = "1.53.2", features = ["macros", "rt-multi-thread", "time"] }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+serde_norway = "0.9.42"
 rocket = { version = "0.5.1", features = ["json"] }
-chrono = "0.4.45"
+chrono = { version = "0.4.45", features = ["serde"] }
 chrono-tz = "0.10.4"
-clokwerk = "0.4.0"
-rand = { version = "0.9.4", features = ["small_rng"] }
-async-trait = "0.1.89"
-anyhow = "1.0.102"
-dotenv = "0.15.0"
+rand = "0.10.3"
+anyhow = "1.0.104"
+dotenvy = "0.15.7"
+
+[lints.rust]
+unsafe_code = "forbid"
+unused_qualifications = "warn"
+unreachable_pub = "warn"
+
+[lints.clippy]
+# Opinionated but widely used best-practice set; `priority = -1` lets the
+# individual lints below override it.
+pedantic = { level = "warn", priority = -1 }
+# The `slack` lib crate only exists to serve our own binary, so documenting
+# `# Errors`/`# Panics` on every public function (meant for published
+# libraries) would be noise.
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+
+# Hand-picked lints from the `restriction` group
+dbg_macro = "warn"
+todo = "warn"
+unimplemented = "warn"
+str_to_string = "warn"
+clone_on_ref_ptr = "warn"
+if_then_some_else_none = "warn"
+needless_raw_strings = "warn"

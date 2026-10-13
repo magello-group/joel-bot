@@ -1,9 +1,8 @@
+use anyhow::{Context, Result, ensure};
 use std::collections::HashMap;
-use std::error::Error;
 
-use rand::prelude::*;
+use rand::seq::IndexedRandom;
 use serde::Deserialize;
-use serde_yaml;
 
 type Part = HashMap<String, Vec<String>>;
 
@@ -35,61 +34,79 @@ pub struct Credits {
 }
 
 impl Configuration {
+    #[must_use]
     pub fn get_authors(&self) -> String {
-        let names = self
-            .intro
-            .credits
-            .names
-            .iter()
-            .map(|name| format!("\t- {}", name))
-            .collect::<Vec<String>>()
-            .join("\n");
-        format!("{}\n\n{}", self.intro.credits.intro, names)
+        let Credits { intro, names } = &self.intro.credits;
+        let author_list = bullet_list(names);
+        format!("{intro}\n\n{author_list}")
     }
 
+    #[must_use]
     pub fn get_message(&self, context: &str) -> String {
         let beginning = Configuration::get_message_part(&self.time_report.beginning, context);
         let middle = Configuration::get_message_part(&self.time_report.middle, context);
         let end = Configuration::get_message_part(&self.time_report.end, context);
-        format!("<!channel> {}\n{}\n{}", beginning, middle, end)
+        format!("<!channel> {beginning}\n{middle}\n{end}")
     }
 
+    #[must_use]
     pub fn get_introduction(&self) -> String {
-        let index = rand::rng().random_range(0..self.intro.greetings.len());
-        let greeting = &self.intro.greetings[index];
-        let features = self
+        let greeting = self
             .intro
-            .features
-            .iter()
-            .map(|feature| format!("\t- {}", feature))
-            .collect::<Vec<String>>()
-            .join("\n");
+            .greetings
+            .choose(&mut rand::rng())
+            .expect("no greetings configured");
+        let about_me = &self.intro.about_me;
+        let feature_list = bullet_list(&self.intro.features);
 
         // Sexiest line of code everest!
         format!(
-            "{}\n\n{}\n\nSaker ni kan fråga (med `@joel-bot <kommando>`:\n{}",
-            greeting, self.intro.about_me, features
+            "{greeting}\n\n{about_me}\n\nSaker ni kan fråga (med `@joel-bot <kommando>`:\n{feature_list}"
         )
     }
 
-    pub fn read() -> Result<Configuration, Box<dyn Error>> {
-        let file = std::fs::File::open("config.yaml")?;
-        let config: Configuration = serde_yaml::from_reader(file)?;
+    pub fn read() -> Result<Configuration> {
+        let file = std::fs::File::open("config.yaml").context("couldn't open config.yaml")?;
+        let config: Configuration =
+            serde_norway::from_reader(file).context("couldn't parse config.yaml")?;
+        config.validate()?;
         Ok(config)
     }
 
-    fn get_message_part(part: &Part, context: &str) -> String {
-        let mut random = rand::rng();
-
-        let part = match part.get(context) {
-            None => part.get("general").unwrap(),
-            Some(part) => part,
-        };
-
-        let index = random.random_range(0..part.len());
-
-        let string = &part[index];
-
-        string.clone()
+    /// Fails at startup, rather than on the last workday, if messages are missing.
+    fn validate(&self) -> Result<()> {
+        ensure!(
+            !self.intro.greetings.is_empty(),
+            "config.yaml: intro.greetings is empty"
+        );
+        let parts = [
+            ("beginning", &self.time_report.beginning),
+            ("middle", &self.time_report.middle),
+            ("end", &self.time_report.end),
+        ];
+        for (name, part) in parts {
+            ensure!(
+                part.get("general")
+                    .is_some_and(|messages| !messages.is_empty()),
+                "config.yaml: time_report.{name}.general needs at least one message"
+            );
+        }
+        Ok(())
     }
+
+    fn get_message_part(part: &Part, context: &str) -> String {
+        part.get(context)
+            .and_then(|messages| messages.choose(&mut rand::rng()))
+            .or_else(|| part.get("general")?.choose(&mut rand::rng()))
+            .expect("no 'general' messages configured")
+            .clone()
+    }
+}
+
+fn bullet_list(items: &[String]) -> String {
+    items
+        .iter()
+        .map(|item| format!("\t- {item}"))
+        .collect::<Vec<_>>()
+        .join("\n")
 }

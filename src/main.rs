@@ -1,91 +1,89 @@
 #[macro_use]
 extern crate rocket;
-use crate::last_day::{get_last_workday, is_last_workday};
 
-// Add dotenv support
-use dotenv::dotenv;
-use rand::SeedableRng;
-
+use std::process::ExitCode;
+use std::sync::Arc;
 use std::time::Duration;
 
-use chrono::{Datelike, NaiveTime, Utc};
-use chrono_tz::Europe::Stockholm;
-
-use crate::config::*;
-use rand::rngs::SmallRng;
-use rand::Rng;
-use reqwest::Client;
-use rocket::form::Form;
-use rocket::response::status::Accepted;
-use rocket::serde::json::Json;
+use anyhow::Context;
+use chrono::{Datelike, NaiveTime};
+use rand::seq::IndexedRandom;
 use rocket::State;
-use slack::client::*;
-use slack::events::{SlackRequest, SlackState};
-use std::collections::HashMap;
-use std::sync::Arc;
+use rocket::form::Form;
+use rocket::response::status::{Accepted, BadRequest};
+use rocket::serde::json::Json;
+use serde::Serialize;
+use slack::client::SlackClient;
+use slack::config::Configuration;
+use slack::events::{IT_IS_TODAY, SlackRequest, SlackState, time_report_message};
+use slack::last_day::{is_last_workday, next_time_report_day, now, today};
 use tokio::time::sleep;
 
-mod config;
-mod last_day;
+const REMINDER_CHANNEL: &str = "allmant";
 
 #[rocket::main]
-async fn main() {
+async fn main() -> ExitCode {
     // Load environment variables from .env
-    dotenv().ok();
+    dotenvy::dotenv().ok();
 
     let args: Vec<String> = std::env::args().collect();
+    let has_arg = |arg: &str| args.iter().any(|a| a == arg);
+    let run_api = has_arg("--operation=api");
+    let check_last_workday = has_arg("--operation=check_last_workday");
+
+    if !run_api && !check_last_workday {
+        eprintln!("Please specify an --operation: api or check_last_workday");
+        println!("Usage: joel-bot --operation=<operation>");
+        println!("Operations:");
+        println!("  api                   Start the Slack API server");
+        println!(
+            "  check_last_workday    Check if today is the last workday of the month and send a message to Slack if so"
+        );
+        return ExitCode::FAILURE;
+    }
+
     let config = Arc::new(Configuration::read().expect("couldn't read configuration file"));
     let client = Arc::new(SlackClient::new().expect("couldn't initiate slack client"));
 
-    if args.contains(&"--operation=api".to_string()) {
-        let slack_events = SlackState::new();
+    if run_api {
         rocket::build()
-            .manage(slack_events)
+            .manage(SlackState::new(client, config))
             .mount("/", routes![slack_request, time_report, gg])
             .launch()
             .await
             .expect("Server failed to start");
-        return;
+        return ExitCode::SUCCESS;
     }
 
-    if args.contains(&"--operation=check_last_workday".to_string()) {
-        last_workday_message(config.clone(), client.clone()).await;
-        return;
+    match last_workday_message(&config, &client).await {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(error) => {
+            eprintln!("check_last_workday failed: {error:#}");
+            ExitCode::FAILURE
+        }
     }
-
-    eprintln!("Please specify an --operation: api or check_last_workday");
-    println!("Usage: joel-bot --operation=<operation>");
-    println!("Operations:");
-    println!("  api                   Start the Slack API server");
-    println!("  check_last_workday    Check if today is the last workday of the month and send a message to Slack if so");
 }
 
-async fn last_workday_message(config: Arc<Configuration>, client: Arc<SlackClient>) {
-    let today = Utc::now().date_naive();
-    match is_last_workday(&today).await {
-        Ok(true) => {
-            let context = today.month().to_string();
-            let message = config.get_message(&context);
-            match client.get_channel_id_by_name("allmant").await {
-                Some(channel_id) => {
-                    if let Err(error) = client.post_message(&channel_id, &message).await {
-                        println!("couldn't post message: {}", error)
-                    }
-                }
-                None => println!("no channel with name 'allmant' found!"),
-            }
-        }
-        Ok(false) => println!("Not last work day"),
-        Err(_) => {
-            // TODO Maybe handle error or nah?
-        }
-    };
+async fn last_workday_message(config: &Configuration, client: &SlackClient) -> anyhow::Result<()> {
+    let today = today();
+    if !is_last_workday(&today).await? {
+        println!("Not last work day");
+        return Ok(());
+    }
+
+    let message = config.get_message(&today.month().to_string());
+    let channel_id = client
+        .get_channel_id_by_name(REMINDER_CHANNEL)
+        .await?
+        .with_context(|| format!("no channel with name '{REMINDER_CHANNEL}' found"))?;
+    client.post_message(&channel_id, &message).await?;
+    println!("Posted time report reminder to #{REMINDER_CHANNEL}");
+    Ok(())
 }
 
 #[post("/slack-request", format = "application/json", data = "<request>")]
-async fn slack_request(state: &State<SlackState>, request: Json<SlackRequest>) -> String {
-    let slack_request_data = request.into_inner();
-    state.handle_request(slack_request_data).await
+fn slack_request(state: &State<SlackState>, request: Json<SlackRequest>) -> String {
+    state.handle_request(request.into_inner())
 }
 
 // More information here: https://api.slack.com/interactivity/slash-commands
@@ -97,164 +95,158 @@ struct SlackSlashMessage {
     response_url: String,
 }
 
+#[derive(Serialize)]
+struct SlashResponse {
+    text: String,
+}
+
+const CALCULATIONS: [&str; 10] = [
+    "vänta",
+    "beräknar",
+    "processerar",
+    "finurlar",
+    "gnuggar halvledarna",
+    "tömmer kvicksilver-depå",
+    "springer i cirklar",
+    "kryssar och jämför",
+    "skruvar och muttrar",
+    "går på djupet",
+];
+
 #[post(
     "/time-report",
     format = "application/x-www-form-urlencoded",
     data = "<request>"
 )]
-async fn time_report(request: Form<SlackSlashMessage>) -> Accepted<String> {
-    let response_url = request.response_url.clone();
-
-    let calculations = [
-        "vänta",
-        "beräknar",
-        "processerar",
-        "finurlar",
-        "gnuggar halvledarna",
-        "tömmer kvicksilver-depå",
-        "springer i cirklar",
-        "kryssar och jämför",
-        "skruvar och muttrar",
-        "går på djupet",
-    ];
+fn time_report(
+    request: Form<SlackSlashMessage>,
+) -> Result<Accepted<String>, BadRequest<&'static str>> {
+    let response_url = request.into_inner().response_url;
+    // Only answer to Slack, so the endpoint can't be used to send requests elsewhere
+    if !response_url.starts_with("https://hooks.slack.com/") {
+        eprintln!("rejected /time-report with response_url {response_url}");
+        return Err(BadRequest("invalid response_url"));
+    }
 
     tokio::spawn(async move {
-        let today = Utc::now().naive_utc().date();
-        let http_client = Client::new();
-        let mut map = HashMap::new();
-        let mut rng = SmallRng::from_os_rng();
+        let today = today();
 
-        match get_last_workday(&today).await {
-            Ok(last_workday) => {
-                if last_workday == today {
-                    map.insert("text", format!("Okej, jag har kikat i kalendern och det är först *{}* som du behöver tidrapportera!", last_workday));
-
-                    sleep_and_send_time_report_response(&http_client, &response_url, &map).await;
-
-                    for _ in 0..2 {
-                        let pos = rng.random_range(0..calculations.len());
-
-                        map.insert("text", format!("... {}", calculations[pos]));
-
-                        sleep_and_send_time_report_response(&http_client, &response_url, &map)
-                            .await;
-                    }
-
-                    map.insert("text", String::from("... det är ju idag!"));
-
-                    sleep_and_send_time_report_response(&http_client, &response_url, &map).await;
-                } else {
-                    map.insert("text", format!("Nu har jag gjort diverse uppslag och scrape:at nätet och det är inte förrän *{}* som du behöver tidrapportera!", last_workday));
-
-                    sleep_and_send_time_report_response(&http_client, &response_url, &map).await
+        let messages = match next_time_report_day(&today).await {
+            Ok(last_workday) if last_workday == today => {
+                let mut rng = rand::rng();
+                let mut messages = vec![time_report_message(&last_workday)];
+                for _ in 0..2 {
+                    let calculation = CALCULATIONS.choose(&mut rng).unwrap();
+                    messages.push(format!("... {calculation}"));
                 }
+                messages.push(String::from(IT_IS_TODAY));
+                messages
             }
+            Ok(last_workday) => vec![format!(
+                "Nu har jag gjort diverse uppslag och scrape:at nätet och det är inte förrän *{last_workday}* som du behöver tidrapportera!"
+            )],
             Err(error) => {
-                println!("failed to get last work day: {}", error);
-
-                map.insert("text", String::from("Misslyckades stenhårt..."));
-                sleep_and_send_time_report_response(&http_client, &response_url, &map).await;
+                eprintln!("failed to get last work day: {error:#}");
+                vec![String::from("Misslyckades stenhårt...")]
             }
         };
+
+        for text in messages {
+            sleep_and_send_time_report_response(&response_url, text).await;
+        }
     });
 
-    Accepted("Ska ta en titt i kalendern...".to_string())
+    Ok(Accepted(String::from("Ska ta en titt i kalendern...")))
 }
 
-async fn sleep_and_send_time_report_response(
-    http_client: &Client,
-    url: &String,
-    map: &HashMap<&str, String>,
-) {
+async fn sleep_and_send_time_report_response(url: &str, text: String) {
     // To "fool" the user that we are actually calculating something
     sleep(Duration::from_secs(2)).await;
 
-    let resp = http_client.post(url.as_str()).json(map).send();
-
-    match resp.await {
-        Ok(r) => {
-            if !r.status().is_success() {
-                println!("failed to send message, {}", r.status().as_str());
-                let result = r.text().await;
-                if result.is_ok() {
-                    println!("{}", result.unwrap());
-                }
-            }
+    match slack::http::CLIENT
+        .post(url)
+        .json(&SlashResponse { text })
+        .send()
+        .await
+    {
+        Ok(response) if !response.status().is_success() => {
+            let status = response.status();
+            let body = response.text().await.unwrap_or_default();
+            eprintln!("couldn't send time report message, Slack answered {status}: {body}");
         }
-        Err(err) => {
-            println!("got exception while sending message: {}", err)
-        }
+        Ok(_) => {}
+        Err(error) => eprintln!("couldn't send time report message: {error:#}"),
     }
 }
 
 #[post(
     "/gg",
     format = "application/x-www-form-urlencoded",
-    data = "<request>"
+    data = "<_request>"
 )]
-async fn gg(request: Form<SlackSlashMessage>) -> Accepted<String> {
-    // 'request' is unused, so prefix with underscore to silence warning
-    let _request = request;
-    let upper = NaiveTime::from_hms_opt(17, 0, 0).unwrap();
-    let lower = NaiveTime::from_hms_opt(8, 0, 0).unwrap();
+fn gg(_request: Form<SlackSlashMessage>) -> Accepted<String> {
+    let workday_start = NaiveTime::from_hms_opt(8, 0, 0).unwrap();
+    let workday_end = NaiveTime::from_hms_opt(17, 0, 0).unwrap();
 
-    let date = Utc::now();
-    let time = date.with_timezone(&Stockholm).time();
+    let current_time = now().time();
 
-    let message = if time < upper && time >= lower {
-        let delta = upper - time;
-        let string = generate_formatted_duration(&delta);
-        format!("Nu är det bara {} innan du kan packa ihop för dagen, tänk vad kul du kan ha i {} till! :smiley:", string, string)
-    } else if time < lower {
-        let delta = lower - time;
-        let string = generate_formatted_duration(&delta);
-        format!("Var lugn! Du behöver inte börja jobba förrän om {}", string)
-    } else {
+    let message = if current_time < workday_start {
+        let time_until_start = generate_formatted_duration(&(workday_start - current_time));
+        format!("Var lugn! Du behöver inte börja jobba förrän om {time_until_start}")
+    } else if current_time < workday_end {
+        let time_left = generate_formatted_duration(&(workday_end - current_time));
         format!(
-            "Klockan är efter {}, stay calm och sluta jobba!",
-            upper.format("%H:%M")
+            "Nu är det bara {time_left} innan du kan packa ihop för dagen, tänk vad kul du kan ha i {time_left} till! :smiley:"
         )
+    } else {
+        let end_time = workday_end.format("%H:%M");
+        format!("Klockan är efter {end_time}, stay calm och sluta jobba!")
     };
 
     Accepted(message)
 }
 
 fn generate_formatted_duration(duration: &chrono::Duration) -> String {
-    let mut formatted = String::new();
-    let seconds = duration.num_seconds() % 60;
-    let minutes = duration.num_minutes() % 60;
+    let unit = |count: i64, singular: &str, plural: &str| match count {
+        0 => None,
+        1 => Some(format!("1 {singular}")),
+        count => Some(format!("{count} {plural}")),
+    };
     let hours = duration.num_hours();
+    let minutes = unit(duration.num_minutes() % 60, "minut", "minuter");
 
-    let append = |s1: &str, s2: &str| -> String {
-        return if s1.len() > 0 {
-            format!("{} och {}", s1, s2)
-        } else {
-            String::from(s2)
-        };
+    // Seconds are only shown when less than an hour remains
+    let parts = if hours > 0 {
+        [unit(hours, "timme", "timmar"), minutes]
+    } else {
+        [
+            minutes,
+            unit(duration.num_seconds() % 60, "sekund", "sekunder"),
+        ]
     };
+    let present_parts: Vec<String> = parts.into_iter().flatten().collect();
 
-    match minutes {
-        1 => formatted = append(&formatted, format!("{} minut", minutes).as_str()),
-        minutes if minutes > 1 => {
-            formatted = append(&formatted, format!("{} minuter", minutes).as_str())
-        }
-        _ => {}
-    };
+    if present_parts.is_empty() {
+        String::from("mindre än en sekund")
+    } else {
+        present_parts.join(" och ")
+    }
+}
 
-    match hours {
-        1 => formatted = append(&format!("{} timme", hours), formatted.as_str()),
-        hours if hours > 1 => formatted = append(&format!("{} timmar", hours), formatted.as_str()),
-        _ => {
-            // Add seconds only when hours are < 1
-            match seconds {
-                1 => formatted = append(&formatted, format!("{} sekund", seconds).as_str()),
-                seconds if seconds > 1 => {
-                    formatted = append(&formatted, format!("{} sekunder", seconds).as_str())
-                }
-                _ => {}
-            };
-        }
-    };
+#[cfg(test)]
+mod test {
+    use super::generate_formatted_duration;
+    use chrono::Duration;
 
-    formatted
+    #[test]
+    fn formatted_durations() {
+        let format = |seconds| generate_formatted_duration(&Duration::seconds(seconds));
+        assert_eq!(format(0), "mindre än en sekund");
+        assert_eq!(format(1), "1 sekund");
+        assert_eq!(format(61), "1 minut och 1 sekund");
+        assert_eq!(format(125), "2 minuter och 5 sekunder");
+        assert_eq!(format(3600), "1 timme");
+        assert_eq!(format(3600 + 60 + 5), "1 timme och 1 minut");
+        assert_eq!(format(2 * 3600 + 30 * 60), "2 timmar och 30 minuter");
+    }
 }
