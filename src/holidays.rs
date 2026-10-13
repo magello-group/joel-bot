@@ -71,6 +71,12 @@ fn is_weekend_or_in(date: NaiveDate, work_free_dates: &[NaiveDate]) -> bool {
     matches!(date.weekday(), Weekday::Sat | Weekday::Sun) || work_free_dates.contains(&date)
 }
 
+/// Whether `date` is a weekend, public holiday or work-free eve.
+#[must_use]
+pub fn is_work_free(date: NaiveDate) -> bool {
+    is_weekend_or_in(date, &work_free_dates(date.year()))
+}
+
 /// The last day of the given month that is not work free.
 #[must_use]
 pub fn last_workday_local(year: i32, month: u32) -> Option<NaiveDate> {
@@ -85,10 +91,6 @@ pub fn last_workday_local(year: i32, month: u32) -> Option<NaiveDate> {
 #[cfg(test)]
 mod test {
     use super::*;
-
-    fn is_work_free(date: NaiveDate) -> bool {
-        is_weekend_or_in(date, &work_free_dates(date.year()))
-    }
 
     fn date(y: i32, m: u32, d: u32) -> NaiveDate {
         NaiveDate::from_ymd_opt(y, m, d).unwrap()

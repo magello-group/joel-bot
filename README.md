@@ -1,6 +1,16 @@
 # joel-bot
 
-Här ska vi skriva funktionalitet så småningom, men det är dag tre kl 17:43 så vi avbryter nu.
+Magello's Slack bot that reminds everyone to time report on the last workday of the month.
+
+- `--operation=check_last_workday` runs as a scheduled job every weekday and posts a
+  reminder to `#allmant` on the last workday of the month (messages in `config.yaml`).
+- `--operation=api` serves Slack:
+  - `@joel-bot` mentions: `tid` (next time report day), `pricing`, `skribenter`, or
+    nothing for an introduction.
+  - `/joel` (`/time-report`): when you next need to time report, only visible to you.
+  - `/gg`: how long until the workday ends.
+
+Both operations need the bot token in `JOEL_BOT_SLACK_TOKEN`.
 
 ## Building
 

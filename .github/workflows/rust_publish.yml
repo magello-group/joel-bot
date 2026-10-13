@@ -32,15 +32,13 @@ jobs:
         run: |
           az acr login --name ${{ secrets.AZURE_CONTAINER_REGISTRY }}
 
-      - name: Get version from github ref
-        id: get_version
-        run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
-
       - name: Build and push
         uses: docker/build-push-action@v7
         with:
           push: true
-          tags: ${{ secrets.AZURE_CONTAINER_REGISTRY }}/joel-bot:${{ steps.get_version.outputs.VERSION }}
+          tags: ${{ secrets.AZURE_CONTAINER_REGISTRY }}/joel-bot:${{ github.ref_name }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Azure container registry logout
         if: always()
@@ -59,10 +57,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
-
-      - name: Get version from github ref
-        id: get_version
-        run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
 
       - name: Get last committer
         id: last_committer
@@ -91,9 +85,9 @@ jobs:
             {
               "addressPrefix": "${{ vars.AZURE_ADDRESS_PREFIX }}",
               "environment": "prod",
-              "imageVersion": "${{ steps.get_version.outputs.VERSION }}",
+              "imageVersion": "${{ github.ref_name }}",
               "tags": {
                 "lastUpdatedBy": "${{ steps.last_committer.outputs.committer }}",
-                "version": "${{ steps.get_version.outputs.VERSION }}"
+                "version": "${{ github.ref_name }}"
               }
             }

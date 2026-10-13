@@ -31,8 +31,11 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
-# Set the Rocket environment to production and port to 8080
-ENV ROCKET_ENV=production
+# Run without root privileges, port 8080 doesn't need them
+RUN useradd --system --no-create-home joel
+USER joel
+
+# Also set in Rocket.toml, but the env var applies even if that file isn't found
 ENV ROCKET_PORT=8080
 
 # Expose port 8080

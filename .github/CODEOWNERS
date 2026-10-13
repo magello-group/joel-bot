@@ -1,0 +1,12 @@
+# The last matching pattern wins. Code owners need write access to the repo.
+
+# Code, messages and infrastructure: any of the maintainers
+* @kazie @simonolander @eric-von-knorring
+
+# Files Dependabot updates, so its PRs only request one reviewer. A PR that
+# also touches the code above still requests all maintainers.
+/Cargo.toml @kazie
+/Cargo.lock @kazie
+/Dockerfile @kazie
+/.devcontainer/ @kazie
+/.github/ @kazie
