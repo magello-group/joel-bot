@@ -1,9 +1,6 @@
 # Stage 1: Build the Rust project
 FROM rust:slim-trixie AS builder
 
-# Set the default toolchain to stable
-RUN rustup default stable
-
 # Create a directory for the project
 WORKDIR /joel-bot
 

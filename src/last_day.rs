@@ -124,9 +124,9 @@ pub async fn is_last_workday(date: &NaiveDate) -> Result<bool> {
 }
 
 /// How long API answers are cached, so corrections reach the long-running server.
-const API_TTL: Duration = Duration::from_secs(24 * 60 * 60);
+const API_TTL: Duration = Duration::from_hours(24);
 /// How long a locally calculated fallback is cached before the API is tried again.
-const FALLBACK_TTL: Duration = Duration::from_secs(10 * 60);
+const FALLBACK_TTL: Duration = Duration::from_mins(10);
 
 struct CacheEntry {
     last_workday: NaiveDate,
@@ -217,7 +217,7 @@ mod test {
     use reqwest::Client;
 
     #[tokio::test]
-    #[ignore = "calls the live holiday API, run with --ignored"]
+    #[ignore = "calls the live holiday API, run with `cargo test -- --ignored`"]
     async fn last_workday_of_october_2020() {
         let date = |day| NaiveDate::from_ymd_opt(2020, 10, day).unwrap();
         let client = Client::new();
@@ -230,7 +230,7 @@ mod test {
     }
 
     #[tokio::test]
-    #[ignore = "calls the live holiday API, run with --ignored"]
+    #[ignore = "calls the live holiday API, run with `cargo test -- --ignored`"]
     async fn rolls_over_to_next_month_after_last_workday() {
         // Uses the API directly, so the local fallback can't hide an API outage
         let next = async |today| {
