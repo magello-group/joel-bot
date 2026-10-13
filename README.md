@@ -9,8 +9,29 @@ Simply build with cargo:
 ```console
 cargo build
 ...
-   Compiling joel-bot v1.0.1 (/home/kazie/src/github/joel-bot)
-    Finished dev [unoptimized + debuginfo] target(s) in 5.35s
+   Compiling joel-bot v2.0.0 (/path/to/joel-bot)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 5.35s
+```
+
+## Testing
+
+```console
+cargo fmt --check
+cargo clippy --all-targets -- -D warnings
+cargo test
+```
+
+Some tests call the live holiday API (sholiday.faboul.se). `holidays::test::live_validation`
+checks the local holiday fallback (`src/holidays.rs`) against the API day by day; it also
+runs weekly in GitHub Actions.
+
+## Running locally
+
+Put `JOEL_BOT_SLACK_TOKEN` in a `.env` file (loaded with dotenvy), then:
+
+```console
+cargo run -- --operation=api
+cargo run -- --operation=check_last_workday
 ```
 
 ### Debug using Dev Containers

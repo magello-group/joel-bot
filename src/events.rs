@@ -1,9 +1,10 @@
-use crate::client::{SlackClient, SlackClientTrait};
+use std::sync::Arc;
+
+use crate::client::SlackClient;
 use crate::config::Configuration;
-use crate::last_day::get_last_workday;
-use chrono::Utc;
+use crate::last_day::{next_time_report_day, today};
+use chrono::NaiveDate;
 use serde::Deserialize;
-use std::sync::atomic::{AtomicPtr, Ordering};
 
 #[derive(Deserialize)]
 #[serde(tag = "type")]
@@ -16,16 +17,12 @@ pub enum SlackRequest {
 
 #[derive(Deserialize)]
 pub struct ChallengeRequest {
-    // TODO: Add if needed
-    token: String,
     pub challenge: String,
 }
 
 #[derive(Deserialize)]
 pub struct EventRequest {
-    // TODO: Add to use when we get request
-    #[allow(dead_code)]
-    token: String,
+    // TODO: Verify the request signature before handling events.
     pub event: Event,
 }
 
@@ -44,85 +41,92 @@ pub enum Event {
 }
 
 pub struct SlackState {
-    token: AtomicPtr<String>,
-    slack_client: SlackClient,
+    slack_client: Arc<SlackClient>,
+    config: Arc<Configuration>,
 }
 
 impl SlackState {
-    pub fn new() -> Self {
+    #[must_use]
+    pub fn new(slack_client: Arc<SlackClient>, config: Arc<Configuration>) -> Self {
         SlackState {
-            slack_client: SlackClient::new().unwrap(),
-            token: AtomicPtr::new(Box::into_raw(Box::new(String::new()))), // Fixing memory management
+            slack_client,
+            config,
         }
     }
 
-    async fn handle_challenge_request(&self, request: ChallengeRequest) -> String {
-        self.token
-            .store(&mut String::from(request.token), Ordering::Relaxed);
-        request.challenge
-    }
-
-    async fn verify_event_then_call(&self, req: EventRequest) -> String {
-        // TODO: Verify the token then allow the request.
-
-        match req.event {
-            Event::AppMentionEvent(event) => {
-                SlackState::handle_mention_event(&self.slack_client, event).await
-            }
-        }
-    }
-
-    pub async fn handle_request(&self, request: SlackRequest) -> String {
+    #[must_use]
+    pub fn handle_request(&self, request: SlackRequest) -> String {
         match request {
-            SlackRequest::Challenge(request) => self.handle_challenge_request(request).await,
-            SlackRequest::Event(request) => self.verify_event_then_call(request).await,
+            SlackRequest::Challenge(request) => request.challenge,
+            SlackRequest::Event(request) => {
+                match request.event {
+                    Event::AppMentionEvent(event) => self.handle_mention_event(event),
+                }
+                String::new()
+            }
         }
     }
 
-    async fn handle_mention_event(
-        client: &impl SlackClientTrait,
-        event: AppMentionEvent,
-    ) -> String {
-        let config = Configuration::read().expect("couldn't read configuration when mentioned");
-        let mut splits: Vec<&str> = event.text.split(" ").collect();
-        splits.drain(0..1);
+    /// Answers in the background so Slack gets its response within 3 seconds
+    /// and doesn't retry the event.
+    fn handle_mention_event(&self, event: AppMentionEvent) {
+        let client = Arc::clone(&self.slack_client);
+        let config = Arc::clone(&self.config);
 
-        let message: String = if splits.len() > 0 {
-            match splits[0] {
-                "tid" => {
-                    let today = Utc::now().naive_utc().date();
-                    match get_last_workday(&today).await {
-                        Ok(last_workday) => {
-                            if last_workday == today {
-                                format!("Okej, jag har kikat i kalendern och det är först *{}* som du behöver tidrapportera!\n\n... vänta\n... beräknar\n... det är ju idag!", last_workday)
-                            } else {
-                                format!("Okej, jag har kikat i kalendern och det är först *{}* som du behöver tidrapportera!", last_workday)
-                            }
-                        }
-                        Err(error) => {
-                            println!("{}", error);
-                            String::from("Herregud någonting gick skitfel! Jag kanske behöver uppdatera min firmware :joel:. Kan någon snälla kolla loggen i Azure?")
-                        }
-                    }
+        tokio::spawn(async move {
+            let message = mention_response(&config, &event).await;
+            if let Err(error) = client.post_message(&event.channel, &message).await {
+                eprintln!("couldn't answer mention: {error:#}");
+            }
+        });
+    }
+}
+
+/// The answer to when you need to time report.
+#[must_use]
+pub fn time_report_message(last_workday: &NaiveDate) -> String {
+    format!(
+        "Okej, jag har kikat i kalendern och det är först *{last_workday}* som du behöver tidrapportera!"
+    )
+}
+
+pub const IT_IS_TODAY: &str = "... det är ju idag!";
+
+async fn mention_response(config: &Configuration, event: &AppMentionEvent) -> String {
+    // The first word is the mention of the bot itself
+    let words: Vec<&str> = event.text.split_whitespace().skip(1).collect();
+
+    match words.first() {
+        None => config.get_introduction(),
+        Some(&"tid") => {
+            let today = today();
+            match next_time_report_day(&today).await {
+                // Unlike /time-report, which sends the "calculations" as separate
+                // delayed messages with random wording, a mention is answered in
+                // one message, so the dramatic pause is written out.
+                Ok(last_workday) if last_workday == today => {
+                    let answer = time_report_message(&last_workday);
+                    format!("{answer}\n\n... vänta\n... beräknar\n{IT_IS_TODAY}")
                 }
-                "pricing" => {
-                    String::from("För den nätta kostnaden av 114,805 kr per månad eller 15,8 öre per timme kan du hosta din egen joel-bot! :joel:")
-                }
-                "skribenter" => {
-                    config.get_authors()
-                }
-                _command => {
-                    format!("Är du skön eller <@{}>? Tror du att _jag_ vet något om *{}*? :joel:", event.user, splits.join(" "))
+                Ok(last_workday) => time_report_message(&last_workday),
+                Err(error) => {
+                    eprintln!("couldn't find the next time report day: {error:#}");
+                    String::from(
+                        "Herregud någonting gick skitfel! Jag kanske behöver uppdatera min firmware :joel:. Kan någon snälla kolla loggen i Azure?",
+                    )
                 }
             }
-        } else {
-            config.get_introduction()
-        };
-        client
-            .post_message(&event.channel, &message)
-            .await
-            .unwrap_or_else(|error| println!("{}", error));
-
-        String::new()
+        }
+        Some(&"pricing") => String::from(
+            "För den nätta kostnaden av 114,805 kr per månad eller 15,8 öre per timme kan du hosta din egen joel-bot! :joel:",
+        ),
+        Some(&"skribenter") => config.get_authors(),
+        Some(_) => {
+            let user = &event.user;
+            let question = words.join(" ");
+            format!(
+                "Är du skön eller <@{user}>? Tror du att _jag_ vet något om *{question}*? :joel:"
+            )
+        }
     }
 }
