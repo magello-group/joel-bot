@@ -11,7 +11,7 @@ use chrono::{Datelike, Days, NaiveDate, Weekday};
     clippy::many_single_char_names,
     reason = "variable names follow the published algorithm"
 )]
-fn easter_sunday(year: i32) -> NaiveDate {
+pub(crate) fn easter_sunday(year: i32) -> NaiveDate {
     let a = year % 19;
     let b = year / 100;
     let c = year % 100;

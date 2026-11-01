@@ -18,6 +18,7 @@ use slack::config::Configuration;
 use slack::events::{IT_IS_TODAY, SlackRequest, SlackState, time_report_message};
 use slack::holidays::is_work_free;
 use slack::last_day::{is_last_workday, next_time_report_day, now, today};
+use slack::occasion::occasion;
 use tokio::time::sleep;
 
 const REMINDER_CHANNEL: &str = "allmant";
@@ -78,7 +79,7 @@ async fn last_workday_message(config: &Configuration, client: &SlackClient) -> a
         return Ok(());
     }
 
-    let message = config.get_message(&today.month().to_string());
+    let message = config.get_message(occasion(today), today.month());
     let channel_id = client
         .get_channel_id_by_name(REMINDER_CHANNEL)
         .await?
