@@ -42,6 +42,20 @@ Some tests call the live holiday API (sholiday.faboul.se). `holidays::test::live
 checks the local holiday fallback (`src/holidays.rs`) against the API day by day; it also
 runs weekly in GitHub Actions.
 
+## Releasing
+
+Publishing a GitHub release builds and deploys that version (`.github/workflows/rust_publish.yml`).
+Once it is deployed, a birthday message with a link to the release is posted to Slack through the
+`SLACK_RELEASE_HOOK_URL` repo secret (an incoming webhook, which decides the channel).
+It must be a repo-level secret (Settings → Secrets and variables → Actions), not a
+`Production` environment secret, as the announce job doesn't use that environment.
+Pre-releases (and tags containing a `-`, like `v3.1.0-beta.1`) are deployed but not announced.
+
+Once announced, a `📣 Announced in Slack` line is added to the release notes, and a re-run of the
+workflow skips the announcement if the line is there. If a pre-release is later promoted to a
+full release, announce it with Actions → Rust CI/CD → Run workflow, giving the tag. That only
+announces, nothing is built or deployed.
+
 ## Running locally
 
 Put `JOEL_BOT_SLACK_TOKEN` in a `.env` file (loaded with dotenvy), then:
