@@ -3,12 +3,21 @@ name: Rust CI/CD
 on:
   release:
     types: [published]
+  # Re-announce a release in Slack without building or deploying anything,
+  # e.g. when a pre-release has been promoted to a full release.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to announce in Slack (e.g. v3.1.0)
+        required: true
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
   build_and_push:
+    # A manual run only announces, deploy is skipped along with this job
+    if: ${{ github.event_name == 'release' }}
     environment: production
     runs-on: ubuntu-latest
     permissions:
@@ -91,3 +100,44 @@ jobs:
                 "version": "${{ github.ref_name }}"
               }
             }
+
+  announce:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # to mark the release as announced
+
+    needs:
+      - deploy
+    # A release is announced once it is deployed, but not betas, whether or not
+    # they are marked as pre-release. A manual run is always announced.
+    if: >-
+      ${{ !cancelled() && (github.event_name == 'workflow_dispatch' || (
+      needs.deploy.result == 'success'
+      && !github.event.release.prerelease
+      && !contains(github.event.release.tag_name, '-'))) }}
+
+    steps:
+      - name: Announce release in Slack
+        shell: bash # enables pipefail, so a jq failure isn't masked by curl
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          SLACK_RELEASE_HOOK_URL: ${{ secrets.SLACK_RELEASE_HOOK_URL }}
+          TAG: ${{ github.event.release.tag_name || inputs.tag }}
+          # Added to the release notes once announced, so a re-run doesn't post again
+          MARKER: 📣 Announced in Slack
+        run: |
+          url=$(gh release view "$TAG" --json url --jq .url)
+          body=$(gh release view "$TAG" --json body --jq .body)
+
+          if grep -qF "$MARKER" <<< "$body"; then
+            echo "::notice::$TAG is already announced in Slack, skipping"
+            exit 0
+          fi
+
+          jq -n --arg tag "$TAG" --arg url "$url" \
+            '{text: ":joel: Ett \($tag)-faldigt leve för Joel-bot! Han leve!\nHurra! Hurra! Hurra! 🥳\n<\($url)|Se release-notes>"}' \
+            | curl --fail-with-body -sS --max-time 30 --retry 3 -X POST -H 'Content-type: application/json' --data @- "$SLACK_RELEASE_HOOK_URL"
+
+          printf '%s\n\n%s\n' "$body" "$MARKER" > "$RUNNER_TEMP/notes.md"
+          gh release edit "$TAG" --notes-file "$RUNNER_TEMP/notes.md"
