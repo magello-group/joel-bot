@@ -4,9 +4,10 @@ Magello's Slack bot that reminds everyone to time report on the last workday of 
 
 - `--operation=check_last_workday` runs as a scheduled job every weekday and posts a
   reminder to `#allmant` on the last workday of the month (messages in `config.yaml`).
-  Messages are picked per part (beginning, middle, end) from `general`, or, 60 % of the time,
-  from a theme: the month number (`1`, `12`) or an occasion (`easter`, `valborg`, `midsommar`,
-  `semester`, `kraftskiva`, `halloween`, see `src/occasion.rs`). Unknown keys fail at startup.
+  Messages are picked per part (beginning, middle, end). On an occasion (`easter`, `valborg`,
+  `midsommar`, `semester`, `kraftskiva`, `halloween`, see `src/occasion.rs`) its messages are
+  always used. Otherwise the month's (`1`, `12`) are used 60 % of the time and `general` the
+  rest. Unknown keys fail at startup.
 - `--operation=api` serves Slack:
   - `@joel-bot` mentions: `tid` (next time report day), `pricing`, `skribenter`, or
     nothing for an introduction.
