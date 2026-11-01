@@ -47,22 +47,32 @@ time_report:
       - "A men tjenare! Denna månad har jag ett meddelande från självaste påskharen:"
       - "Påskharen har lämnat ett meddelande och det är ingen glad nyhet:"
       - "🐣 Påskkärringarna är på väg och äggen är målade, men först en påminnelse från er lokala påsk-bot:"
+      - "Någon har gömt något i kalendern, och det är inte ett ägg. Det är en deadline:"
     valborg:
       - "Vårvindar friska leka och viska, och jag påminner om månadens slut:"
       - "Brasan är redo och våren är i antågande, men först ett litet ärende:"
+      - "Studentmössorna åker på och champagnen kyls, men först en sak som inte kan vänta:"
+      - "Jag kan inte tända någon brasa, bara en liten påminnelse:"
     midsommar:
       - "Hoppas ni dansat kring stången tills fötterna protesterade! Nu är det dags för något mindre trevligt:"
       - "Sommaren är här och sillen är slut, men en sak återstår:"
+      - "Nypotatis och sill är avklarat. Nu återstår den sämsta rätten på menyn:"
+      - "Myggen biter och sommaren har börjat på riktigt, men en sak kliar värre:"
     semester:
       - "Ni som är lediga har förmodligen inte läst det här. Ni som jobbar, nu gäller det:"
       - "Det är högsommar och halva kontoret är på stranden. Ni som är kvar:"
+      - "Kontoret är tomt, kaffemaskinen ensam och jag pratar med mig själv. Men ni som läser det här:"
+      - "Klockan tickar även i juli, tyvärr. Jag är en bot och har ingen semester, så jag påminner:"
     kraftskiva:
       - "Dillen doftar och grytan puttrar, men först en liten påminnelse:"
       - "Lyktorna hänger, hattarna sitter och snapsvisorna övas, men först:"
+      - "Augusti sträcker ut handen med sina sista varma kvällar, men först en sak:"
+      - "Det är dags för sång, snaps och sill, men först en sak som inte kan sjungas bort:"
     halloween:
       - "Nattens skräck är här! 🦇 Det här är inget skämt, det är en deadline:"
       - "Det spökar i tidrapporten, och spöket är jag. Jag vill bara att ni gör klart den. 👻"
       - "Bus eller godis? Jag tar tidrapport, tack. Godis kan jag ändå inte äta. 🎃"
+      - "Knack knack! Det är joel-bot, utklädd till en påminnelse som vill ha era timmar:"
 
   middle:
     general:
@@ -89,27 +99,37 @@ time_report:
       - "Ditt påskägg är gömt i ett av kleers djupaste projekt. Gå och leta, men glöm inte tidrapporten. 🥚"
       - "Innan ni åker på påsk: tidrapportera! Annars blir det kallt kaffe och hårdkokta ägg när ni kommer tillbaka. 🥚"
       - "Ingen påskmust utan tidrapport. Det är lag. (Det är inte lag, men det borde vara.) 🐰"
+      - "Påsken närmar sig, och med den kommer fyra lediga dagar. Tidrapportera idag, så slipper ni tänka på den under ledigheten. 🌷"
     12:
-      - "Från djupet av min beräkningsmodul: Kom ihåg att rapportera era tider så att året kan stängas på riktigt! 🎆"
-      - "Mellandagsrea överallt, men tidrapporten säljs inte ut: den kostar fortfarande fem minuter. 🛍️"
+      - "Från djupet av min beräkningsmodul: Kom ihåg att rapportera era tider så att året kan stängas ordentligt! 🔒"
+      - "Rean pågår överallt, men tidrapporten säljs inte ut: den kostar fortfarande fem minuter. 🛍️"
       - "Tomten har kollat sin lista två gånger och är klar för i år. Kan ni säga detsamma om er tidrapport? 🎅"
     valborg:
       - "Elda inte upp tidrapporten tillsammans med riset, den behövs. 🔥"
       - "Blommor spirar, fåglar sjunger och tidrapporten förblir tom. Idag är sista dagen. 🌷"
+      - "Månadens sista dag är här. Rapportera timmarna innan solen går ner och festen börjar. 🔥"
+      - "Det finns mycket som ska firas i kväll, men tidrapporter är till för att lämnas in. Idag är sista dagen. 🌱"
     midsommar:
-      - "Sju sorters blommor under kudden gav er förhoppningsvis en dröm, men sju sorters timmar i tidrapporten ger mig fred. 🌼"
+      - "Sju sorters blommor under kudden ger en dröm, men sju sorters timmar i tidrapporten ger mig fred. 🌼"
       - "Midsommarglädjen är över, men tidrapporten står kvar. Idag är sista dagen i månaden. 🌼"
+      - "Ledigheten väntar, men månaden tar slut idag. Rapportera timmarna så kan ni njuta utan dåligt samvete. 🌞"
+      - "Det finns två sorters människor: de som tidrapporterar innan semestern och de som gör det från stranden med sand i tangentbordet. Idag är sista dagen. ⛱️"
     semester:
       - "Solen skiner, tiden går, tidrapporten väntar. ☀️"
       - "Semestern är nära eller redan här. Idag är sista dagen att rapportera, så den blir ostörd. 🏖️"
+      - "Tidrapporten går att göra från hängmattan, så länge det finns wifi. Idag är sista dagen. 🌴"
+      - "Sommaren är inte tidlös, hur mycket vi än önskar det. Idag är sista dagen att tidrapportera juli. ⏳"
     kraftskiva:
       - "Kräftorna väntar inte på någon, och det gör inte tidrapporten heller. 🦞"
       - "Idag är sista dagen att tidrapportera. Rapportera först, så blir kräftorna godare. 🦞"
+      - "Att tidrapportera är som att pilla kräftor: tråkigt i början, men väldigt skönt när man är klar. Idag är sista dagen. 🦞"
+      - "Tre saker som ingen vill missa: sista kräftan, sista visan och sista dagen att tidrapportera. Den sista är idag. 🦞"
     halloween:
-      - "Månadens sista arbetsdag, och Halloween står vid dörren! Det mest skrämmande är inte spöken, utan en tom tidrapport. 🎃"
+      - "Månadens sista arbetsdag, och Halloween står vid dörren! Det mest skrämmande är inte spöken, utan en tom tidrapport. 🕯️"
       - "Zombies jagar hjärnor, jag jagar tidrapporter. Vi har båda ett ensidigt intresse. 🧟"
       - "Orapporterade timmar blir spöken. De hemsöker lönebeskedet och står vid kaffemaskinen och suckar. 👻"
       - "Det finns en vampyr i lönesystemet, och den lever på uteblivna tidrapporter. :bat:"
+      - "Skräckfilmen heter *Tidrapporten som aldrig blev inskickad*, och ni vill inte vara med i den. Idag är sista dagen. 🎬"
 
   end:
     general:
@@ -133,23 +153,33 @@ time_report:
       - "Ho ho ho... nej, fel högtid. Har har hare! 🐇🥚 :joel:"
       - "Glad påsk! Hoppas ni hittar alla ägg, och alla projektkoder. 🐣"
       - "Jag hoppar iväg nu. Hare-lelujah, vad jag älskar påsk! 🐇"
+      - "Vi ses efter påsk! Jag är en bot, så jag jobbar förstås över helgen. 🐇"
     valborg:
       - "Ha en trevlig valborg! Sjung högt, tidrapportera tyst. 🎶"
       - "Ha en trevlig valborg! Glöm inte att rapportera innan kören drar igång. 🎶"
+      - "Glad valborg! Skål för alla som hann rapportera i tid. 🥂"
+      - "Trevlig valborg! Ta med en varm tröja, bålet värmer bara framsidan. 🧥"
     midsommar:
       - "Små grodorna, små grodorna, är lustiga att se! Kvack kvack, vi hörs nästa månad! 🐸"
       - "Ha en fin sommar! Jag räknar bitar, ni kan räkna jordgubbar. 🍓"
+      - "Ha en fin sommar! Lägg in timmarna, lägg ifrån er mobilen och lägg er i hängmattan. 🍹"
+      - "Nu lämnar jag er till sommaren. Själv stannar jag i serverhallen, där det alltid är svalt. ❄️"
     semester:
-      - "Hej då, och ha en skön sommar! Solen väntar, tidrapporten inte. 🌴"
+      - "Hej då, och ha en skön sommar! Hälsa solen från mig, själv får jag nöja mig med lysdioder. 🌞"
       - "Ha en skön sommar! Packa solkräm, badbyxor och en färdig tidrapport. 🏝️"
+      - "Hej då! Jag håller ställningarna medan ni badar. Det är ju vad en bot är till för. 🌊"
+      - "Nu går jag på semester, i alla fall mentalt. Ses i augusti! 🏖️"
     kraftskiva:
       - "Helan går! Och tidrapporten gick först. 🍻"
       - "Skål! Och kom ihåg: ingen tidrapport lämnas in efter tredje snapsen. 🍻"
+      - "Smaklig spis! Sug gärna i huvudet på kräftan, men låt inte tidrapporten suga. 🍽️"
+      - "Glad kräftskiva! Må alla era skal vara knäckta och alla era tidrapporter inskickade. 🍻"
     halloween:
       - "Nu går jag och gömmer mig under en spindelväv. Hej då! 🕷️"
       - "Ha en kuslig kväll! Men håll er borta från `unsafe`, det är där de riktiga monstren bor. 🕸️"
       - "Må er kväll vara fylld av godis och fri från segfaults. 🍬🎃"
+      - "Hej då! Om något säger 'buh' i kväll, kolla att det inte är en glömd tidrapport. 🪦"
     12:
       - "Gott Nytt År! Önskar joel-bot 🎆"
-      - "Kom ihåg att hålla er nyårskod fri från panics, och låt värmen från mitt Rust-programmerande skal sprida nyårskänsla till er alla!"
+      - "Håll er nyårskod fri från panics, och låt värmen från mitt Rust-programmerande skal sprida nyårskänsla till er alla!"
       - "Från oss alla, till er alla, en riktigt god tidrapportering!"

@@ -10,9 +10,9 @@ use serde::{Deserialize, Deserializer};
 
 use crate::occasion::Occasion;
 
-/// Chance of using themed messages, an occasion's or the month's, when there
+/// Chance of using a month's messages, e.g. january or december, when there
 /// are some. The rest is `general`, so the themed ones don't wear out.
-const THEME_CHANCE: f64 = 0.6;
+const MONTH_THEME_CHANCE: f64 = 0.6;
 
 /// Which messages of a part to choose from, a key under `time_report` in
 /// `config.yaml`.
@@ -99,9 +99,10 @@ impl Configuration {
         format!("{intro}\n\n{author_list}")
     }
 
-    /// Picks the reminder text. An `occasion` (e.g. halloween) is used
-    /// `THEME_CHANCE` of the time, otherwise the `month`'s messages are used
-    /// with the same chance, and everything else falls back to `general`.
+    /// Picks the reminder text. An `occasion` (e.g. halloween) always decides
+    /// the messages. Otherwise the `month`'s messages are used
+    /// `MONTH_THEME_CHANCE` of the time, and everything else falls back to
+    /// `general`.
     #[must_use]
     pub fn get_message(&self, occasion: Option<Occasion>, month: u32) -> String {
         self.get_message_with(occasion, month, &mut rand::rng())
@@ -194,11 +195,9 @@ impl Configuration {
 }
 
 fn pick_theme(occasion: Option<Occasion>, month: u32, rng: &mut impl Rng) -> Theme {
-    if let Some(occasion) = occasion
-        && rng.random_bool(THEME_CHANCE)
-    {
+    if let Some(occasion) = occasion {
         Theme::Occasion(occasion)
-    } else if rng.random_bool(THEME_CHANCE) {
+    } else if rng.random_bool(MONTH_THEME_CHANCE) {
         Theme::Month(month)
     } else {
         Theme::General
@@ -277,7 +276,7 @@ time_report:
     }
 
     #[test]
-    fn themes_are_mixed_with_general() {
+    fn occasions_always_win_and_months_mix_with_general() {
         let mut rng = rng();
         let mut seen = |occasion, month| -> HashSet<Theme> {
             (0..1000)
@@ -286,11 +285,7 @@ time_report:
         };
         assert_eq!(
             seen(Some(Occasion::Halloween), 10),
-            HashSet::from([
-                Theme::General,
-                Theme::Occasion(Occasion::Halloween),
-                Theme::Month(10)
-            ])
+            HashSet::from([Theme::Occasion(Occasion::Halloween)])
         );
         assert_eq!(
             seen(None, 12),
