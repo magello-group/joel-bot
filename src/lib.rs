@@ -4,3 +4,4 @@ pub mod events;
 pub mod holidays;
 pub mod http;
 pub mod last_day;
+pub mod occasion;
