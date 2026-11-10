@@ -143,7 +143,7 @@ mod test {
             holiday: Option<String>,
         }
 
-        let client = reqwest::Client::new();
+        let client = crate::http::client();
 
         let mut mismatches = Vec::new();
         for year in 2020..=2030 {

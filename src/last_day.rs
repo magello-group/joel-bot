@@ -212,16 +212,15 @@ mod test {
 
     use super::{get_last_workday_from_api, next_time_report_day_with};
     use crate::holidays::last_workday_local;
+    use crate::http::client;
     use anyhow::Context;
     use chrono::Datelike;
-    use reqwest::Client;
 
     #[tokio::test]
     #[ignore = "calls the live holiday API, run with `cargo test -- --ignored`"]
     async fn last_workday_of_october_2020() {
         let date = |day| NaiveDate::from_ymd_opt(2020, 10, day).unwrap();
-        let client = Client::new();
-        let last_workday = get_last_workday_from_api(&client, &date(31))
+        let last_workday = get_last_workday_from_api(&client(), &date(31))
             .await
             .expect("failed");
 
@@ -234,7 +233,7 @@ mod test {
     async fn rolls_over_to_next_month_after_last_workday() {
         // Uses the API directly, so the local fallback can't hide an API outage
         let next = async |today| {
-            let client = Client::new();
+            let client = client();
             let from_api = async |date: &NaiveDate| get_last_workday_from_api(&client, date).await;
             next_time_report_day_with(&today, from_api).await.unwrap()
         };
