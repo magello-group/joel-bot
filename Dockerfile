@@ -24,7 +24,7 @@ FROM debian:trixie-slim
 # Copy the binary from the builder stage
 COPY --from=builder /joel-bot/target/release/joel-bot /joel-bot
 # Copy configuration files
-COPY config.yaml Rocket.toml /
+COPY config.toml Rocket.toml /
 
 # TLS uses rustls, only the root certificates are needed
 RUN apt-get update && \

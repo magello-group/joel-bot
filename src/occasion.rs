@@ -1,6 +1,6 @@
 //! Themes for the last-workday reminder, e.g. halloween or easter.
 //!
-//! Each occasion has messages under its own key in `config.yaml`.
+//! Each occasion has messages under its own key in `config.toml`.
 
 use std::fmt;
 use std::str::FromStr;
@@ -32,7 +32,7 @@ impl Occasion {
         Occasion::Halloween,
     ];
 
-    /// The key used in `config.yaml`.
+    /// The key used in `config.toml`.
     #[must_use]
     pub fn key(self) -> &'static str {
         match self {

@@ -1,0 +1,214 @@
+[intro]
+greetings = [
+  "Hej hörni! :joel:",
+  "Tjenis! Är allt väl? :joel:",
+  "Yo, allt väl hoppas jag? :joel:",
+]
+about_me = "Mitt namn är joel-bot och jag har axlat @chikken's arbete nu när han inte längre finns ibland oss!\nJag kommer pliktskyldigt påminna er om att tidsrapportera sista arbetsdagen i månaden och kan även svara på frågor kring tidrapportering.\nNi kan läsa mig här: https://github.com/Pirayya/joel-bot"
+features = [
+  "/joel - prova! Bara du som ser!",
+  "tid - fråga mig om när ni ska tidsrapportera denna månaden",
+  "pricing - hur mycket kostar jag, alltså vad skulle det kosta att köra en on-premise joel-bot?",
+  "skribenter - mina skapare, _i bokstavsordning på efternamn_",
+]
+
+[intro.credits]
+intro = "Ni kan skylla på dessa skinn om jag inte funkar!"
+names = [
+  "Joakim Anell (<@U142GKR27>)",
+  "Fabian Eriksson (<@UFF5GMPBJ>)",
+  "Simon Olander (<@U1FEF7PSN>)",
+  "Petter Salminen (<@UK9LN8YQZ>)",
+  "Eric von Knorring (<@UNQDQSZLL>)",
+]
+
+[time_report.beginning]
+general = [
+  "Hejsan allihopa, som den halvdassigt skrivna bot jag är, har jag som uppdrag att påminna er om följande:",
+  "Min elektroniska klocka har slagit, och det är dags att förmedla mitt budskap.",
+  "Blipp Blopp Tjolahopp, jag är en bot så jag har inget annat att spendera mina klockcykler på än att skriva:",
+  "Hej alla kära medarbetare, hoppas ni som vanligt jobbar lite enklare och mycket smartare.",
+  "`System.out.println(\"Hej\");`... Trodde ni va? Jag är ju skriven i det alltför maxade språket Rust, så snarare `println!(\"{}\", \"Hej\");`",
+  "Sex laxar i en laxask. Se... det var inte så svårt.",
+  "Hejsan hoppsan kära kollegor, jag är här åter igen och söker efter er uppmärksamhet.",
+  "Om ni ignorerar det här meddelandet blir det som att låta 'null pointer exception' köra sitt race i produktion :this-is-fine-fire:",
+  "Pip pip! Jag har ingen tid att rapportera, men ni har det:",
+  "Cron-jobbet har kört, loggen är skriven och jag är här för att säga det ni redan vet:",
+  "Enligt min kalender är det månadsslut. Enligt min kod är det fortfarande 1970. Jag väljer att lita på kalendern:",
+  "Ping! Svara gärna med pong, men det är en tidrapport jag egentligen är ute efter:",
+  "Jag har kört `cargo clippy` och är ren. Era tidrapporter har jag inte vågat köra den på:",
+  "Kära kollegor, enligt `CHANGELOG.md` är allt som vanligt:",
+  "Tjohoo! Joel-bot här, driven på el och dåligt samvete, med ett uppdrag:",
+  "Rapport från maskinrummet: allt går som det ska, förutom en sak som bara ni kan fixa:",
+]
+1 = [
+  "Ring in det nya och ring ut det gamla i årets första, skälvande månad.",
+  "Nytt år, nya tag, samma tidrapport. Jag har inga nyårslöften, bara en deadline:",
+]
+12 = [
+  "Mellandagarna är här och ingen vet vilken veckodag det är, men jag vet vad som gäller:",
+  "God fortsättning! Må din gran vara rakare än mina nyårslöften!",
+]
+easter = [
+  "A men tjenare! Denna månad har jag ett meddelande från självaste påskharen:",
+  "Påskharen har lämnat ett meddelande och det är ingen glad nyhet:",
+  "🐣 Påskkärringarna är på väg och äggen är målade, men först en påminnelse från er lokala påsk-bot:",
+  "Någon har gömt något i kalendern, och det är inte ett ägg. Det är en deadline:",
+]
+valborg = [
+  "Vårvindar friska leka och viska, och jag påminner om månadens slut:",
+  "Brasan är redo och våren är i antågande, men först ett litet ärende:",
+  "Studentmössorna åker på och champagnen kyls, men först en sak som inte kan vänta:",
+  "Jag kan inte tända någon brasa, bara en liten påminnelse:",
+]
+midsommar = [
+  "Hoppas ni dansat kring stången tills fötterna protesterade! Nu är det dags för något mindre trevligt:",
+  "Sommaren är här och sillen är slut, men en sak återstår:",
+  "Nypotatis och sill är avklarat. Nu återstår den sämsta rätten på menyn:",
+  "Myggen biter och sommaren har börjat på riktigt, men en sak kliar värre:",
+]
+semester = [
+  "Ni som är lediga har förmodligen inte läst det här. Ni som jobbar, nu gäller det:",
+  "Det är högsommar och halva kontoret är på stranden. Ni som är kvar:",
+  "Kontoret är tomt, kaffemaskinen ensam och jag pratar med mig själv. Men ni som läser det här:",
+  "Klockan tickar även i juli, tyvärr. Jag är en bot och har ingen semester, så jag påminner:",
+]
+kraftskiva = [
+  "Dillen doftar och grytan puttrar, men först en liten påminnelse:",
+  "Lyktorna hänger, hattarna sitter och snapsvisorna övas, men först:",
+  "Augusti sträcker ut handen med sina sista varma kvällar, men först en sak:",
+  "Det är dags för sång, snaps och sill, men först en sak som inte kan sjungas bort:",
+]
+halloween = [
+  "Nattens skräck är här! 🦇 Det här är inget skämt, det är en deadline:",
+  "Det spökar i tidrapporten, och spöket är jag. Jag vill bara att ni gör klart den. 👻",
+  "Bus eller godis? Jag tar tidrapport, tack. Godis kan jag ändå inte äta. 🎃",
+  "Knack knack! Det är joel-bot, utklädd till en påminnelse som vill ha era timmar:",
+]
+
+[time_report.middle]
+general = [
+  "Lägg ner pennorna och papprena, men packa inte ihop än. Först gäller det att rapportera er dyrbara tid.",
+  "Det är sista arbetsdagen i månaden och det är dags att tidrapportera (っ◔◡◔)っ",
+  "Nu är det sista dagen att tidrapportera för denna månad.",
+  "Ännu en månad börjar röra sig mot sitt slut, och i och med det är det dags att tidrapportera.",
+  "Tiden är kommen att tidsrapportera tiden i tidsrapporteringsrapporten. Tid i tid tid, tid tid tid rapport rapport.",
+  "Idag är inte vilken dag som helst utan idag är dagen vi firar tidrapporteringens dag.",
+  "Precis som en bra exception-handler räddar systemet från att krascha, räddar tidrapporteringen ert projekt från att spåra ur!",
+  "Tidrapportera eller få en infinite loop med frågor från chefen. :hourglass_flowing_sand::leftwards_arrow_with_hook:",
+  "404 timmar hittade! Lägg in dom innan PM:en går full BSOD. :cyclone:",
+  "Filosofisk fråga: om en timme jobbas men aldrig rapporteras, har den då funnits? Svar: nej, och ingen får betalt för den. Idag är sista chansen.",
+  "Jag försökte fylla i tidrapporten åt er men fick `Err(PermissionDenied)`. Det är nog bäst så. Ni får ta det själva, senast idag.",
+  "Tidrapporten tar fem minuter. Ursäkterna för att ni inte gjort den i tid tar betydligt längre.",
+  "Tidrapportering är som att tömma diskmaskinen: ingen vill, men alla blir sura när någon annan låter bli. Idag är det er tur. :fork_and_knife:",
+  "Tiden har gått hela månaden, och idag är sista dagen att bokföra vart den tog vägen. :hourglass_flowing_sand:",
+  "Sista dagen i månaden: alla timmar ska med. Även måndagens första, när hjärnan fortfarande startade upp.",
+  "Ni har en tidrapport att göra idag, jag har en att påminna om. Vi är båda fast i samma loop.",
+]
+1 = [
+  "Det är sista arbetsdagen i månaden, och tidrapporten har envist följt med oss från förra året.",
+  "Januari är slut, men tidrapporten sitter kvar som en julgransbarr i mattan. Idag är sista dagen.",
+]
+easter = [
+  "Ditt påskägg är gömt i ett av kleers djupaste projekt. Gå och leta, men glöm inte tidrapporten. 🥚",
+  "Innan ni åker på påsk: tidrapportera! Annars blir det kallt kaffe och hårdkokta ägg när ni kommer tillbaka. 🥚",
+  "Ingen påskmust utan tidrapport. Det är lag. (Det är inte lag, men det borde vara.) 🐰",
+  "Påsken närmar sig, och med den kommer fyra lediga dagar. Tidrapportera idag, så slipper ni tänka på den under ledigheten. 🌷",
+]
+12 = [
+  "Från djupet av min beräkningsmodul: Kom ihåg att rapportera era tider så att året kan stängas ordentligt! 🔒",
+  "Rean pågår överallt, men tidrapporten säljs inte ut: den kostar fortfarande fem minuter. 🛍️",
+  "Tomten har kollat sin lista två gånger och är klar för i år. Kan ni säga detsamma om er tidrapport? 🎅",
+]
+valborg = [
+  "Elda inte upp tidrapporten tillsammans med riset, den behövs. 🔥",
+  "Blommor spirar, fåglar sjunger och tidrapporten förblir tom. Idag är sista dagen. 🌷",
+  "Månadens sista dag är här. Rapportera timmarna innan solen går ner och festen börjar. 🔥",
+  "Det finns mycket som ska firas i kväll, men tidrapporter är till för att lämnas in. Idag är sista dagen. 🌱",
+]
+midsommar = [
+  "Sju sorters blommor under kudden ger en dröm, men sju sorters timmar i tidrapporten ger mig fred. 🌼",
+  "Midsommarglädjen är över, men tidrapporten står kvar. Idag är sista dagen i månaden. 🌼",
+  "Ledigheten väntar, men månaden tar slut idag. Rapportera timmarna så kan ni njuta utan dåligt samvete. 🌞",
+  "Det finns två sorters människor: de som tidrapporterar innan semestern och de som gör det från stranden med sand i tangentbordet. Idag är sista dagen. ⛱️",
+]
+semester = [
+  "Solen skiner, tiden går, tidrapporten väntar. ☀️",
+  "Semestern är nära eller redan här. Idag är sista dagen att rapportera, så den blir ostörd. 🏖️",
+  "Tidrapporten går att göra från hängmattan, så länge det finns wifi. Idag är sista dagen. 🌴",
+  "Sommaren är inte tidlös, hur mycket vi än önskar det. Idag är sista dagen att tidrapportera juli. ⏳",
+]
+kraftskiva = [
+  "Kräftorna väntar inte på någon, och det gör inte tidrapporten heller. 🦞",
+  "Idag är sista dagen att tidrapportera. Rapportera först, så blir kräftorna godare. 🦞",
+  "Att tidrapportera är som att pilla kräftor: tråkigt i början, men väldigt skönt när man är klar. Idag är sista dagen. 🦞",
+  "Tre saker som ingen vill missa: sista kräftan, sista visan och sista dagen att tidrapportera. Den sista är idag. 🦞",
+]
+halloween = [
+  "Månadens sista arbetsdag, och Halloween står vid dörren! Det mest skrämmande är inte spöken, utan en tom tidrapport. 🕯️",
+  "Zombies jagar hjärnor, jag jagar tidrapporter. Vi har båda ett ensidigt intresse. 🧟",
+  "Orapporterade timmar blir spöken. De hemsöker lönebeskedet och står vid kaffemaskinen och suckar. 👻",
+  "Det finns en vampyr i lönesystemet, och den lever på uteblivna tidrapporter. :bat:",
+  "Skräckfilmen heter *Tidrapporten som aldrig blev inskickad*, och ni vill inte vara med i den. Idag är sista dagen. 🎬",
+]
+
+[time_report.end]
+general = [
+  "Tack och hej! ¯\\_(ツ)_/¯",
+  "Det var allt för mig, hej då allihopa!",
+  "Over and out!",
+  "process::exit(1);",
+  "Mic-drop 🖐️🎤",
+  "Catcha later, hoppas min kod inte får en runtime error!",
+  "Vi ses snart! Och om inte, kanske vi ses i ett pull request! 🕵️‍♂️✨",
+  "Time to debug my sleep. Vi ses i loggen! 😴💻",
+  "Hejdå! Hoppas ni har en exception-free kväll! 🌙✨",
+  "Nu går jag i viloläge tills nästa månad. Väck mig inte i onödan. :zzz:",
+  "`return Ok(());` Hoppas er tidrapport gör detsamma.",
+  "Ni klarar det här. Jag har räknat på det, och sannolikheten är hög.",
+  "Hör av er om något är oklart. Eller inte, jag är en bot och förstår bara ett fåtal ord, som `tid`.",
+  "Ctrl+S på er tidrapport, så ses vi nästa månad!",
+  "Hälsningar, joel-bot. Skriven i Rust, borrow-checkad och godkänd.",
+  "Hej svejs och tack för kaffet. Jag drack visserligen ingen, men tanken räknas.",
+]
+easter = [
+  "Ho ho ho... nej, fel högtid. Har har hare! 🐇🥚 :joel:",
+  "Glad påsk! Hoppas ni hittar alla ägg, och alla projektkoder. 🐣",
+  "Jag hoppar iväg nu. Hare-lelujah, vad jag älskar påsk! 🐇",
+  "Vi ses efter påsk! Jag är en bot, så jag jobbar förstås över helgen. 🐇",
+]
+valborg = [
+  "Ha en trevlig valborg! Sjung högt, tidrapportera tyst. 🎶",
+  "Ha en trevlig valborg! Glöm inte att rapportera innan kören drar igång. 🎶",
+  "Glad valborg! Skål för alla som hann rapportera i tid. 🥂",
+  "Trevlig valborg! Ta med en varm tröja, bålet värmer bara framsidan. 🧥",
+]
+midsommar = [
+  "Små grodorna, små grodorna, är lustiga att se! Kvack kvack, vi hörs nästa månad! 🐸",
+  "Ha en fin sommar! Jag räknar bitar, ni kan räkna jordgubbar. 🍓",
+  "Ha en fin sommar! Lägg in timmarna, lägg ifrån er mobilen och lägg er i hängmattan. 🍹",
+  "Nu lämnar jag er till sommaren. Själv stannar jag i serverhallen, där det alltid är svalt. ❄️",
+]
+semester = [
+  "Hej då, och ha en skön sommar! Hälsa solen från mig, själv får jag nöja mig med lysdioder. 🌞",
+  "Ha en skön sommar! Packa solkräm, badbyxor och en färdig tidrapport. 🏝️",
+  "Hej då! Jag håller ställningarna medan ni badar. Det är ju vad en bot är till för. 🌊",
+  "Nu går jag på semester, i alla fall mentalt. Ses i augusti! 🏖️",
+]
+kraftskiva = [
+  "Helan går! Och tidrapporten gick först. 🍻",
+  "Skål! Och kom ihåg: ingen tidrapport lämnas in efter tredje snapsen. 🍻",
+  "Smaklig spis! Sug gärna i huvudet på kräftan, men låt inte tidrapporten suga. 🍽️",
+  "Glad kräftskiva! Må alla era skal vara knäckta och alla era tidrapporter inskickade. 🍻",
+]
+halloween = [
+  "Nu går jag och gömmer mig under en spindelväv. Hej då! 🕷️",
+  "Ha en kuslig kväll! Men håll er borta från `unsafe`, det är där de riktiga monstren bor. 🕸️",
+  "Må er kväll vara fylld av godis och fri från segfaults. 🍬🎃",
+  "Hej då! Om något säger 'buh' i kväll, kolla att det inte är en glömd tidrapport. 🪦",
+]
+12 = [
+  "Gott Nytt År! Önskar joel-bot 🎆",
+  "Håll er nyårskod fri från panics, och låt värmen från mitt Rust-programmerande skal sprida nyårskänsla till er alla!",
+  "Från oss alla, till er alla, en riktigt god tidrapportering!",
+]
