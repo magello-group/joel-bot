@@ -15,7 +15,7 @@ use crate::occasion::Occasion;
 const MONTH_THEME_CHANCE: f64 = 0.6;
 
 /// Which messages of a part to choose from, a key under `time_report` in
-/// `config.yaml`.
+/// `config.toml`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 enum Theme {
     General,
@@ -143,9 +143,8 @@ impl Configuration {
     }
 
     pub fn read() -> Result<Configuration> {
-        let file = std::fs::File::open("config.yaml").context("couldn't open config.yaml")?;
-        let config: Configuration =
-            serde_norway::from_reader(file).context("couldn't parse config.yaml")?;
+        let text = std::fs::read_to_string("config.toml").context("couldn't read config.toml")?;
+        let config: Configuration = toml::from_str(&text).context("couldn't parse config.toml")?;
         config.validate()?;
         Ok(config)
     }
@@ -155,7 +154,7 @@ impl Configuration {
     fn validate(&self) -> Result<()> {
         ensure!(
             !self.intro.greetings.is_empty(),
-            "config.yaml: intro.greetings is empty"
+            "config.toml: intro.greetings is empty"
         );
         let parts = [
             ("beginning", &self.time_report.beginning),
@@ -166,19 +165,19 @@ impl Configuration {
             for (theme, messages) in part {
                 ensure!(
                     !messages.is_empty(),
-                    "config.yaml: time_report.{name}.{theme} is empty"
+                    "config.toml: time_report.{name}.{theme} is empty"
                 );
             }
             ensure!(
                 part.contains_key(&Theme::General),
-                "config.yaml: time_report.{name}.general needs at least one message"
+                "config.toml: time_report.{name}.general needs at least one message"
             );
         }
         for (name, part) in parts {
             for occasion in Occasion::ALL {
                 ensure!(
                     part.contains_key(&Theme::Occasion(occasion)),
-                    "config.yaml: time_report.{name}.{occasion} needs at least one message"
+                    "config.toml: time_report.{name}.{occasion} needs at least one message"
                 );
             }
         }
@@ -222,15 +221,23 @@ mod test {
     use super::*;
 
     const MINIMAL_CONFIG: &str = r#"
-intro:
-  greetings: ["Hej"]
-  about_me: ""
-  features: []
-  credits: { intro: "", names: [] }
-time_report:
-  beginning: { general: ["a"] }
-  middle: { general: [] }
-  end: { general: ["c"] }
+[intro]
+greetings = ["Hej"]
+about_me = ""
+features = []
+
+[intro.credits]
+intro = ""
+names = []
+
+[time_report.beginning]
+general = ["a"]
+
+[time_report.middle]
+general = []
+
+[time_report.end]
+general = ["c"]
 "#;
 
     fn rng() -> StdRng {
@@ -238,7 +245,7 @@ time_report:
     }
 
     #[test]
-    fn config_yaml_is_valid() {
+    fn config_toml_is_valid() {
         Configuration::read().unwrap();
     }
 
@@ -296,9 +303,11 @@ time_report:
     #[test]
     fn unknown_keys_are_rejected() {
         for key in ["halowen", "13", "0", "05", "General"] {
-            let yaml =
-                MINIMAL_CONFIG.replace("beginning: { general", &format!("beginning: {{ {key}"));
-            let error = serde_norway::from_str::<Configuration>(&yaml)
+            let toml = MINIMAL_CONFIG.replace(
+                "[time_report.beginning]\ngeneral",
+                &format!("[time_report.beginning]\n{key}"),
+            );
+            let error = toml::from_str::<Configuration>(&toml)
                 .unwrap_err()
                 .to_string();
             assert!(error.contains("unknown key"), "{key}: {error}");
@@ -307,15 +316,15 @@ time_report:
 
     #[test]
     fn empty_general_messages_are_rejected() {
-        let config: Configuration = serde_norway::from_str(MINIMAL_CONFIG).unwrap();
+        let config: Configuration = toml::from_str(MINIMAL_CONFIG).unwrap();
         let error = config.validate().unwrap_err().to_string();
         assert!(error.contains("time_report.middle"), "{error}");
     }
 
     #[test]
     fn missing_occasion_messages_are_rejected() {
-        let yaml = MINIMAL_CONFIG.replace("middle: { general: [] }", "middle: { general: [b] }");
-        let config: Configuration = serde_norway::from_str(&yaml).unwrap();
+        let toml = MINIMAL_CONFIG.replace("general = []", r#"general = ["b"]"#);
+        let config: Configuration = toml::from_str(&toml).unwrap();
         let error = config.validate().unwrap_err().to_string();
         assert!(error.contains("time_report.beginning.easter"), "{error}");
     }
