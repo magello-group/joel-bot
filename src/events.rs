@@ -143,8 +143,7 @@ async fn mention_response(config: &Configuration, event: &AppMentionEvent) -> St
             let user = event
                 .user
                 .as_ref()
-                .map(|user| format!(" <@{user}>"))
-                .unwrap_or_default();
+                .map_or_default(|user| format!(" <@{user}>"));
             let question = words.join(" ");
             format!("Är du skön eller{user}? Tror du att _jag_ vet något om *{question}*? :joel:")
         }
