@@ -5,12 +5,13 @@
 use std::fmt;
 use std::str::FromStr;
 
-use chrono::{Datelike, NaiveDate};
+use jiff::ToSpan;
+use jiff::civil::Date;
 
 use crate::holidays::easter_sunday;
 
 /// How many days before Easter Sunday the reminder still gets the easter theme.
-const EASTER_DAYS_BEFORE: i64 = 7;
+const EASTER_DAYS_BEFORE: i32 = 7;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Occasion {
@@ -68,9 +69,9 @@ impl FromStr for Occasion {
 /// last workday of April, June, July, August and October always lands close
 /// enough to the occasion. Not meant for other dates.
 #[must_use]
-pub fn occasion(last_workday: NaiveDate) -> Option<Occasion> {
-    let days_until_easter = (easter_sunday(last_workday.year()) - last_workday).num_days();
-    if (0..=EASTER_DAYS_BEFORE).contains(&days_until_easter) {
+pub fn occasion(last_workday: Date) -> Option<Occasion> {
+    let easter = easter_sunday(last_workday.year());
+    if (easter - EASTER_DAYS_BEFORE.days()..=easter).contains(&last_workday) {
         return Some(Occasion::Easter);
     }
     match last_workday.month() {
@@ -87,12 +88,10 @@ pub fn occasion(last_workday: NaiveDate) -> Option<Occasion> {
 mod test {
     use std::collections::HashSet;
 
+    use jiff::civil::date;
+
     use super::*;
     use crate::holidays::last_workday_local;
-
-    fn date(y: i32, m: u32, d: u32) -> NaiveDate {
-        NaiveDate::from_ymd_opt(y, m, d).unwrap()
-    }
 
     #[test]
     fn occasions_of_last_workdays() {
@@ -135,7 +134,7 @@ mod test {
     fn every_occasion_is_reachable() {
         let reached: HashSet<_> = (2024..=2040)
             .flat_map(|year| (1..=12).map(move |month| (year, month)))
-            .filter_map(|(year, month)| last_workday_local(year, month))
+            .map(|(year, month)| last_workday_local(date(year, month, 1)))
             .filter_map(occasion)
             .collect();
         assert_eq!(reached, HashSet::from(Occasion::ALL));

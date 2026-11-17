@@ -6,7 +6,8 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use anyhow::Context;
-use chrono::{Datelike, NaiveTime};
+use jiff::SignedDuration;
+use jiff::civil::{Time, time};
 use rand::seq::IndexedRandom;
 use rocket::State;
 use rocket::form::Form;
@@ -74,7 +75,7 @@ async fn main() -> ExitCode {
 
 async fn last_workday_message(config: &Configuration, client: &SlackClient) -> anyhow::Result<()> {
     let today = today();
-    if !is_last_workday(&today).await? {
+    if !is_last_workday(today).await? {
         println!("Not last work day");
         return Ok(());
     }
@@ -139,10 +140,10 @@ fn time_report(
     tokio::spawn(async move {
         let today = today();
 
-        let messages = match next_time_report_day(&today).await {
+        let messages = match next_time_report_day(today).await {
             Ok(last_workday) if last_workday == today => {
                 let mut rng = rand::rng();
-                let mut messages = vec![time_report_message(&last_workday)];
+                let mut messages = vec![time_report_message(last_workday)];
                 for calculation in CALCULATIONS.sample(&mut rng, 2) {
                     messages.push(format!("... {calculation}"));
                 }
@@ -192,47 +193,45 @@ async fn sleep_and_send_time_report_response(url: &str, text: String) {
     data = "<_request>"
 )]
 fn gg(_request: Form<SlackSlashMessage>) -> Accepted<String> {
-    let workday_start = NaiveTime::from_hms_opt(8, 0, 0).unwrap();
-    let workday_end = NaiveTime::from_hms_opt(17, 0, 0).unwrap();
+    const WORKDAY_START: Time = time(8, 0, 0, 0);
+    const WORKDAY_END: Time = time(17, 0, 0, 0);
 
     let now = now();
     let current_time = now.time();
 
-    let message = if is_work_free(now.date_naive()) {
+    let message = if is_work_free(now.date()) {
         String::from("Det är ju ledigt idag! Stäng datorn och gå ut i solen :sunny:")
-    } else if current_time < workday_start {
-        let time_until_start = generate_formatted_duration(&(workday_start - current_time));
+    } else if current_time < WORKDAY_START {
+        let time_until_start =
+            generate_formatted_duration(current_time.duration_until(WORKDAY_START));
         format!("Var lugn! Du behöver inte börja jobba förrän om {time_until_start}")
-    } else if current_time < workday_end {
-        let time_left = generate_formatted_duration(&(workday_end - current_time));
+    } else if current_time < WORKDAY_END {
+        let time_left = generate_formatted_duration(current_time.duration_until(WORKDAY_END));
         format!(
             "Nu är det bara {time_left} innan du kan packa ihop för dagen, tänk vad kul du kan ha i {time_left} till! :smiley:"
         )
     } else {
-        let end_time = workday_end.format("%H:%M");
+        let end_time = WORKDAY_END.strftime("%H:%M");
         format!("Klockan är efter {end_time}, stay calm och sluta jobba!")
     };
 
     Accepted(message)
 }
 
-fn generate_formatted_duration(duration: &chrono::Duration) -> String {
+fn generate_formatted_duration(duration: SignedDuration) -> String {
     let unit = |count: i64, singular: &str, plural: &str| match count {
         0 => None,
         1 => Some(format!("1 {singular}")),
         count => Some(format!("{count} {plural}")),
     };
-    let hours = duration.num_hours();
-    let minutes = unit(duration.num_minutes() % 60, "minut", "minuter");
+    let hours = duration.as_hours();
+    let minutes = unit(duration.as_mins() % 60, "minut", "minuter");
 
     // Seconds are only shown when less than an hour remains
     let parts = if hours > 0 {
         [unit(hours, "timme", "timmar"), minutes]
     } else {
-        [
-            minutes,
-            unit(duration.num_seconds() % 60, "sekund", "sekunder"),
-        ]
+        [minutes, unit(duration.as_secs() % 60, "sekund", "sekunder")]
     };
     let present_parts: Vec<String> = parts.into_iter().flatten().collect();
 
@@ -245,12 +244,13 @@ fn generate_formatted_duration(duration: &chrono::Duration) -> String {
 
 #[cfg(test)]
 mod test {
+    use jiff::SignedDuration;
+
     use super::generate_formatted_duration;
-    use chrono::Duration;
 
     #[test]
     fn formatted_durations() {
-        let format = |seconds| generate_formatted_duration(&Duration::seconds(seconds));
+        let format = |seconds| generate_formatted_duration(SignedDuration::from_secs(seconds));
         assert_eq!(format(0), "mindre än en sekund");
         assert_eq!(format(1), "1 sekund");
         assert_eq!(format(61), "1 minut och 1 sekund");

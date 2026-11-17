@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crate::client::SlackClient;
 use crate::config::Configuration;
 use crate::last_day::{next_time_report_day, today};
-use chrono::NaiveDate;
+use jiff::civil::Date;
 use serde::Deserialize;
 
 #[derive(Deserialize)]
@@ -93,7 +93,7 @@ impl SlackState {
 
 /// The answer to when you need to time report.
 #[must_use]
-pub fn time_report_message(last_workday: &NaiveDate) -> String {
+pub fn time_report_message(last_workday: Date) -> String {
     format!(
         "Okej, jag har kikat i kalendern och det är först *{last_workday}* som du behöver tidrapportera!"
     )
@@ -118,15 +118,15 @@ async fn mention_response(config: &Configuration, event: &AppMentionEvent) -> St
         None => config.get_introduction(),
         Some("tid") => {
             let today = today();
-            match next_time_report_day(&today).await {
+            match next_time_report_day(today).await {
                 // Unlike /time-report, which sends the "calculations" as separate
                 // delayed messages with random wording, a mention is answered in
                 // one message, so the dramatic pause is written out.
                 Ok(last_workday) if last_workday == today => {
-                    let answer = time_report_message(&last_workday);
+                    let answer = time_report_message(last_workday);
                     format!("{answer}\n\n... vänta\n... beräknar\n{IT_IS_TODAY}")
                 }
-                Ok(last_workday) => time_report_message(&last_workday),
+                Ok(last_workday) => time_report_message(last_workday),
                 Err(error) => {
                     eprintln!("couldn't find the next time report day: {error:#}");
                     String::from(

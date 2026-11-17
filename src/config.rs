@@ -19,7 +19,7 @@ const MONTH_THEME_CHANCE: f64 = 0.6;
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 enum Theme {
     General,
-    Month(u32),
+    Month(i8),
     Occasion(Occasion),
 }
 
@@ -32,7 +32,7 @@ impl FromStr for Theme {
         }
         // Compared as text so that e.g. "05" isn't accepted for May
         if let Some(month) = key
-            .parse::<u32>()
+            .parse::<i8>()
             .ok()
             .filter(|month| (1..=12).contains(month) && month.to_string() == key)
         {
@@ -104,14 +104,14 @@ impl Configuration {
     /// `MONTH_THEME_CHANCE` of the time, and everything else falls back to
     /// `general`.
     #[must_use]
-    pub fn get_message(&self, occasion: Option<Occasion>, month: u32) -> String {
+    pub fn get_message(&self, occasion: Option<Occasion>, month: i8) -> String {
         self.get_message_with(occasion, month, &mut rand::rng())
     }
 
     fn get_message_with(
         &self,
         occasion: Option<Occasion>,
-        month: u32,
+        month: i8,
         rng: &mut impl Rng,
     ) -> String {
         let theme = pick_theme(occasion, month, rng);
@@ -193,7 +193,7 @@ impl Configuration {
     }
 }
 
-fn pick_theme(occasion: Option<Occasion>, month: u32, rng: &mut impl Rng) -> Theme {
+fn pick_theme(occasion: Option<Occasion>, month: i8, rng: &mut impl Rng) -> Theme {
     if let Some(occasion) = occasion {
         Theme::Occasion(occasion)
     } else if rng.random_bool(MONTH_THEME_CHANCE) {
