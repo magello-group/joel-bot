@@ -3,8 +3,10 @@ use std::sync::{LazyLock, Mutex};
 use std::time::{Duration, Instant};
 
 use anyhow::{Context, Result, anyhow};
-use chrono::{DateTime, Datelike, Months, NaiveDate, Utc};
-use chrono_tz::{Europe::Stockholm, Tz};
+use jiff::civil::Date;
+use jiff::civil::DateTime;
+use jiff::tz::{self, TimeZone};
+use jiff::{Timestamp, ToSpan};
 use reqwest::Client;
 use serde::Deserialize;
 use serde::de::DeserializeOwned;
@@ -30,7 +32,7 @@ struct SholidayFaboulResponse<Day> {
 #[derive(Deserialize)]
 pub(crate) struct SholidayFaboulDay {
     #[serde(alias = "datum")]
-    pub(crate) date: NaiveDate,
+    pub(crate) date: Date,
     #[serde(alias = "arbetsfri dag")]
     work_free_day: String,
 }
@@ -44,7 +46,7 @@ impl SholidayFaboulDay {
 /// The last day in `days` that is not work free.
 pub(crate) fn last_workday_in<'a>(
     mut days: impl DoubleEndedIterator<Item = &'a SholidayFaboulDay>,
-) -> Option<NaiveDate> {
+) -> Option<Date> {
     days.rfind(|day| !day.is_work_free()).map(|day| day.date)
 }
 
@@ -99,7 +101,7 @@ async fn fetch_days_once<Day: DeserializeOwned>(
     Ok(response.days)
 }
 
-async fn get_last_workday_from_api(client: &Client, date: &NaiveDate) -> Result<NaiveDate> {
+async fn get_last_workday_from_api(client: &Client, date: Date) -> Result<Date> {
     let year = date.year();
     let month = date.month();
     let days: Vec<SholidayFaboulDay> =
@@ -107,20 +109,23 @@ async fn get_last_workday_from_api(client: &Client, date: &NaiveDate) -> Result<
     last_workday_in(days.iter()).with_context(|| format!("no workday found in {year}-{month:02}"))
 }
 
-/// The current time in Sweden.
+/// Built into the binary, so it doesn't depend on the system's time zone database.
+static STOCKHOLM: TimeZone = tz::get!("Europe/Stockholm");
+
+/// The current wall-clock time in Sweden.
 #[must_use]
-pub fn now() -> DateTime<Tz> {
-    Utc::now().with_timezone(&Stockholm)
+pub fn now() -> DateTime {
+    STOCKHOLM.to_datetime(Timestamp::now())
 }
 
 /// Today's date in Sweden.
 #[must_use]
-pub fn today() -> NaiveDate {
-    now().date_naive()
+pub fn today() -> Date {
+    now().date()
 }
 
-pub async fn is_last_workday(date: &NaiveDate) -> Result<bool> {
-    Ok(get_last_workday(date).await? == *date)
+pub async fn is_last_workday(date: Date) -> Result<bool> {
+    Ok(get_last_workday(date).await? == date)
 }
 
 /// How long API answers are cached, so corrections reach the long-running server.
@@ -129,16 +134,15 @@ const API_TTL: Duration = Duration::from_hours(24);
 const FALLBACK_TTL: Duration = Duration::from_mins(10);
 
 struct CacheEntry {
-    last_workday: NaiveDate,
+    last_workday: Date,
     expires: Instant,
 }
 
 /// Last workday of the month of `date`. Prefers the holiday API, falls back to
 /// the local calendar if the API is unavailable. Results are cached per month.
-pub async fn get_last_workday(date: &NaiveDate) -> Result<NaiveDate> {
-    static CACHE: LazyLock<Mutex<HashMap<(i32, u32), CacheEntry>>> =
-        LazyLock::new(Default::default);
-    let key = (date.year(), date.month());
+pub async fn get_last_workday(date: Date) -> Result<Date> {
+    static CACHE: LazyLock<Mutex<HashMap<Date, CacheEntry>>> = LazyLock::new(Default::default);
+    let key = date.first_of_month();
 
     if let Some(entry) = CACHE.lock().unwrap().get(&key)
         && Instant::now() < entry.expires
@@ -154,9 +158,7 @@ pub async fn get_last_workday(date: &NaiveDate) -> Result<NaiveDate> {
         Ok(last_workday) => (last_workday, API_TTL),
         Err(error) => {
             eprintln!("holiday API failed ({error:#}), using local calendar");
-            let last_workday = last_workday_local(date.year(), date.month())
-                .context("couldn't calculate last workday locally")?;
-            (last_workday, FALLBACK_TTL)
+            (last_workday_local(date), FALLBACK_TTL)
         }
     };
     let entry = CacheEntry {
@@ -169,7 +171,7 @@ pub async fn get_last_workday(date: &NaiveDate) -> Result<NaiveDate> {
 
 /// The next day you need to time report: this month's last workday, or next
 /// month's if this month's has already passed.
-pub async fn next_time_report_day(today: &NaiveDate) -> Result<NaiveDate> {
+pub async fn next_time_report_day(today: Date) -> Result<Date> {
     next_time_report_day_with(today, get_last_workday).await
 }
 
@@ -177,55 +179,98 @@ pub async fn next_time_report_day(today: &NaiveDate) -> Result<NaiveDate> {
 /// the local calendar says that is likely, both months are looked up
 /// concurrently so a slow API is waited on once.
 async fn next_time_report_day_with(
-    today: &NaiveDate,
-    last_workday_of: impl AsyncFn(&NaiveDate) -> Result<NaiveDate>,
-) -> Result<NaiveDate> {
+    today: Date,
+    last_workday_of: impl AsyncFn(Date) -> Result<Date>,
+) -> Result<Date> {
     let first_of_next_month = today
-        .with_day(1)
-        .and_then(|first| first.checked_add_months(Months::new(1)))
+        .first_of_month()
+        .checked_add(1.month())
         .context("date out of range")?;
-    let rollover_likely = last_workday_local(today.year(), today.month())
-        .is_some_and(|last_workday| last_workday < *today);
+    let rollover_likely = last_workday_local(today) < today;
 
     let (this_month, next_month) = if rollover_likely {
-        let (this_month, next_month) = tokio::join!(
-            last_workday_of(today),
-            last_workday_of(&first_of_next_month)
-        );
+        let (this_month, next_month) =
+            tokio::join!(last_workday_of(today), last_workday_of(first_of_next_month));
         (this_month?, Some(next_month))
     } else {
         (last_workday_of(today).await?, None)
     };
 
-    if this_month >= *today {
+    if this_month >= today {
         return Ok(this_month);
     }
     match next_month {
         Some(next_month) => next_month,
-        None => last_workday_of(&first_of_next_month).await,
+        None => last_workday_of(first_of_next_month).await,
     }
 }
 
 #[cfg(test)]
 mod test {
-    use chrono::NaiveDate;
+    use jiff::civil::{Date, date};
 
-    use super::{get_last_workday_from_api, next_time_report_day_with};
+    use super::{
+        SholidayFaboulDay, SholidayFaboulResponse, get_last_workday_from_api,
+        next_time_report_day_with,
+    };
     use crate::holidays::last_workday_local;
     use crate::http::client;
-    use anyhow::Context;
-    use chrono::Datelike;
+
+    /// Parses the API's format offline, since a parse failure in production is
+    /// hidden by the fallback to the local calendar. The sample keeps the
+    /// fields we don't read, to show that they are ignored.
+    #[test]
+    fn parses_api_response() {
+        let json = r#"{
+            "cachetid": "2026-11-17 10:00:00",
+            "version": "2.1",
+            "uri": "/dagar/v2.1/2020/10",
+            "startdatum": "2020-10-30",
+            "slutdatum": "2020-10-31",
+            "dagar": [
+                {
+                    "datum": "2020-10-30",
+                    "veckodag": "Fredag",
+                    "arbetsfri dag": "Nej",
+                    "röd dag": "Nej",
+                    "vecka": "44",
+                    "dag i vecka": "5",
+                    "namnsdag": ["Kennet", "Kent"],
+                    "flaggdag": ""
+                },
+                {
+                    "datum": "2020-10-31",
+                    "veckodag": "Lördag",
+                    "arbetsfri dag": "Ja",
+                    "röd dag": "Nej",
+                    "vecka": "44",
+                    "dag i vecka": "6",
+                    "helgdag": "Alla helgons dag",
+                    "namnsdag": ["Veronika", "Vera"],
+                    "flaggdag": ""
+                }
+            ]
+        }"#;
+        let response: SholidayFaboulResponse<SholidayFaboulDay> =
+            serde_json::from_str(json).unwrap();
+        let [friday, saturday] = response.days.as_slice() else {
+            panic!("expected two days");
+        };
+        assert_eq!(friday.date, date(2020, 10, 30));
+        assert!(!friday.is_work_free());
+        assert_eq!(saturday.date, date(2020, 10, 31));
+        assert!(saturday.is_work_free());
+    }
 
     #[tokio::test]
     #[ignore = "calls the live holiday API, run with `cargo test -- --ignored`"]
     async fn last_workday_of_october_2020() {
-        let date = |day| NaiveDate::from_ymd_opt(2020, 10, day).unwrap();
-        let last_workday = get_last_workday_from_api(&client(), &date(31))
+        let last_workday = get_last_workday_from_api(&client(), date(2020, 10, 31))
             .await
             .expect("failed");
 
         // 2020-10-30 was a Friday, and therefore the last workday of October 2020
-        assert_eq!(last_workday, date(30));
+        assert_eq!(last_workday, date(2020, 10, 30));
     }
 
     #[tokio::test]
@@ -234,29 +279,22 @@ mod test {
         // Uses the API directly, so the local fallback can't hide an API outage
         let next = async |today| {
             let client = client();
-            let from_api = async |date: &NaiveDate| get_last_workday_from_api(&client, date).await;
-            next_time_report_day_with(&today, from_api).await.unwrap()
+            let from_api = async |date: Date| get_last_workday_from_api(&client, date).await;
+            next_time_report_day_with(today, from_api).await.unwrap()
         };
-        let date = |month, day| NaiveDate::from_ymd_opt(2026, month, day).unwrap();
         // 2026-10-30 is the last workday of October, the 31st is a Saturday
-        assert_eq!(next(date(10, 30)).await, date(10, 30));
-        assert_eq!(next(date(10, 31)).await, date(11, 30));
+        assert_eq!(next(date(2026, 10, 30)).await, date(2026, 10, 30));
+        assert_eq!(next(date(2026, 10, 31)).await, date(2026, 11, 30));
     }
 
     #[tokio::test]
     async fn rolls_over_with_local_calendar() {
-        let local = async |date: &NaiveDate| {
-            last_workday_local(date.year(), date.month()).context("no workday")
-        };
-        let date = |month, day| NaiveDate::from_ymd_opt(2026, month, day).unwrap();
-        let next = async |today| next_time_report_day_with(&today, local).await.unwrap();
-        assert_eq!(next(date(10, 13)).await, date(10, 30));
-        assert_eq!(next(date(10, 30)).await, date(10, 30));
-        assert_eq!(next(date(10, 31)).await, date(11, 30));
+        let local = async |date: Date| anyhow::Ok(last_workday_local(date));
+        let next = async |today| next_time_report_day_with(today, local).await.unwrap();
+        assert_eq!(next(date(2026, 10, 13)).await, date(2026, 10, 30));
+        assert_eq!(next(date(2026, 10, 30)).await, date(2026, 10, 30));
+        assert_eq!(next(date(2026, 10, 31)).await, date(2026, 11, 30));
         // Rolls over the year too: 2026-12-31 is nyårsafton
-        assert_eq!(
-            next(date(12, 31)).await,
-            NaiveDate::from_ymd_opt(2027, 1, 29).unwrap()
-        );
+        assert_eq!(next(date(2026, 12, 31)).await, date(2027, 1, 29));
     }
 }

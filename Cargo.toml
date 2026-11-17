@@ -24,8 +24,10 @@ tokio = { version = "1.53.2", features = ["macros", "rt-multi-thread", "time"] }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.154"
 rocket = { version = "0.5.1", features = ["json"] }
-chrono = { version = "0.4.45", features = ["serde"] }
-chrono-tz = "0.10.4"
+# Only the time zone built in by `static` is used, so the default features'
+# system time zone lookups are left out (the runtime image has no tzdata), and
+# with them the small `tz-fat` and `perf-inline` speedups, which aren't needed
+jiff = { version = "1.0.0", default-features = false, features = ["std", "serde", "static"] }
 rand = "0.10.3"
 anyhow = "1.0.104"
 dotenvy = "0.15.7"
